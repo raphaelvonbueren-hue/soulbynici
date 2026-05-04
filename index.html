@@ -16,8 +16,8 @@
      =========================================== -->
 <script>
   window.SUPABASE_CONFIG = {
-    url: 'https://zaieumbmfksnfzbzqqln.supabase.co',          // z.B. https://abcdefgh.supabase.co
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphaWV1bWJtZmtzbmZ6YnpxcWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDIyODgsImV4cCI6MjA5MzQ3ODI4OH0.gaQHJEpcnfmjVfLFcVZUVC_6KB2byqmILxTPNi-Bw68'  // langer eyJhbGc... String
+    url: 'YOUR_SUPABASE_URL',          // z.B. https://abcdefgh.supabase.co
+    anonKey: 'YOUR_SUPABASE_ANON_KEY'  // langer eyJhbGc... String
   };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3919,7 +3919,7 @@ body.edit-mode-active [data-edit].edited::before {
       </div>
       <div class="hero-trust">
         <span class="hero-trust-item" data-edit="hero-trust-1">Über 200 begleitete Sitzungen</span>
-        <span class="hero-trust-item" data-edit="hero-trust-2">Online & vor Ort in der Schweiz</span>
+        <span class="hero-trust-item" data-edit="hero-trust-2">Online · in deinem Raum, in deiner Zeit</span>
       </div>
     </div>
   </div>
@@ -4202,7 +4202,7 @@ body.edit-mode-active [data-edit].edited::before {
               <li><strong>Verbindlichkeit:</strong> Mit dem Klick auf „Buchen" ist dein Termin verbindlich reserviert.</li>
               <li><strong>Verschiebung:</strong> Bis 24 Stunden vor dem Termin kannst du kostenfrei verschieben.</li>
               <li><strong>Stornierung:</strong> Bei kurzfristigerer Absage (weniger als 24 Stunden) oder Nichterscheinen wird der volle Betrag fällig.</li>
-              <li><strong>Format:</strong> Die Sitzung findet online via Zoom statt — du erhältst den Link rechtzeitig per E-Mail.</li>
+              <li><strong>Format:</strong> Die Sitzung findet online statt — den Zugangslink erhältst du rechtzeitig per E-Mail.</li>
               <li><strong>Hinweis:</strong> Energiearbeit ist keine medizinische oder therapeutische Behandlung und ersetzt keine ärztliche oder psychotherapeutische Betreuung. Jegliche Haftung ist im gesetzlich zulässigen Rahmen ausgeschlossen.</li>
             </ul>
 
@@ -4441,11 +4441,11 @@ body.edit-mode-active [data-edit].edited::before {
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Schweiz · Sitzungen vor Ort & online
+            Schweiz · Sitzungen finden online statt
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Mo–Fr · 9:00–19:00 Uhr
+            Termine auf Vereinbarung
           </li>
         </ul>
       </div>
@@ -5083,16 +5083,16 @@ body.edit-mode-active [data-edit].edited::before {
         Auf Anfrage gewähre ich dir Einsicht in die zu deiner Person geführten Notizen.
       </p>
 
-      <h3>5. Online-Sitzungen via Zoom</h3>
+      <h3>5. Online-Sitzungen</h3>
       <p>
-        Sitzungen finden online über <strong>Zoom Video Communications, Inc.</strong> (USA) statt.
-        Bei der Teilnahme werden technische Daten (IP-Adresse, Geräteinformationen, Audio-/Video-Streams) sowie dein Name
-        durch Zoom bearbeitet. Diese Daten können in die USA übertragen werden.
+        Sitzungen finden online über einen Videocall-Dienst statt. Bei der Teilnahme werden technische Daten
+        (IP-Adresse, Geräteinformationen, Audio-/Video-Streams) sowie dein Name durch den jeweiligen Anbieter bearbeitet.
+        Den genauen Anbieter und dessen Datenschutzbedingungen teile ich dir mit dem Zugangslink mit, sodass du dich vor
+        der Sitzung damit vertraut machen kannst.
       </p>
       <p>
-        Zoom unterliegt dem EU-US Data Privacy Framework und bietet entsprechende Garantien. Die Sitzungen werden von
-        meiner Seite <strong>nicht aufgezeichnet</strong>, sofern du dem nicht ausdrücklich vorab zustimmst.
-        Mehr Informationen: <a href="https://zoom.us/de/privacy" target="_blank" rel="noopener">zoom.us/de/privacy</a>
+        Die Sitzungen werden von meiner Seite <strong>nicht aufgezeichnet</strong>, sofern du dem nicht
+        ausdrücklich vorab zustimmst.
       </p>
 
       <h3>6. Cookies und lokale Speicherung</h3>
@@ -5104,7 +5104,7 @@ body.edit-mode-active [data-edit].edited::before {
 
       <h3>7. Externe Dienste</h3>
       <ul>
-        <li><strong>Zoom</strong> (USA) – für Online-Sitzungen, siehe Abschnitt 5</li>
+        <li><strong>Videocall-Anbieter</strong> – für Online-Sitzungen, siehe Abschnitt 5</li>
         <li><strong>Google Fonts</strong> – Schriftarten werden in der Regel lokal geladen</li>
         <li><strong>Unsplash</strong> – Bilder werden über deren CDN ausgeliefert</li>
       </ul>
@@ -5403,8 +5403,8 @@ const DEFAULT_FAQS = [
     a: "Wir beginnen mit einem kurzen Gespräch, in dem du teilen kannst, was gerade in dir lebt. Dann führe ich dich in einen ruhigen Zustand und wir arbeiten gemeinsam mit deiner Energie. Am Ende lassen wir das Erlebte sanft integrieren."
   },
   {
-    q: "Online oder vor Ort – was ist besser?",
-    a: "Beides funktioniert wunderbar. Online-Sitzungen sind genauso wirksam – Energie kennt keine Distanz. Vor-Ort-Sitzungen bieten dir einen geschützten physischen Raum. Wähle, was sich für dich stimmig anfühlt."
+    q: "Wie finden die Sitzungen statt?",
+    a: "Sitzungen finden online statt — du brauchst nur einen ruhigen Ort und eine stabile Internetverbindung. So bist du in deinem Raum, in deiner Zeit, und kannst dich ganz auf dich einlassen. Den Zugangslink erhältst du rechtzeitig per E-Mail."
   },
   {
     q: "Wie viele Sitzungen brauche ich?",
