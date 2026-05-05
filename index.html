@@ -3745,11 +3745,12 @@ footer .brand {
   align-items: center;
 }
 .business-about-image {
+  --business-about-url: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80');
   aspect-ratio: 4/5;
   border-radius: var(--radius-lg);
   background:
     linear-gradient(160deg, rgba(176, 137, 104, 0.25), rgba(79, 108, 126, 0.5)),
-    url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80') center/cover;
+    var(--business-about-url) center/cover;
   box-shadow: var(--shadow-lg);
   position: relative;
 }
@@ -5318,6 +5319,22 @@ body.edit-mode-active [data-edit].edited::before {
               <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('business')">Zurücksetzen</button>
             </div>
             <div class="image-manager-status" data-status="business"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview" data-preview="business-about" style="aspect-ratio:4/5; border-radius:var(--radius-lg);"></div>
+          <div class="image-manager-info">
+            <h5>Business-Portrait („Wer dahinter steht")</h5>
+            <p>Dein Foto in der Business-Sektion neben „Strukturiert, diskret, persönlich". Hochkant 4:5 (z.B. 800×1000 px), professionelles Portrait empfohlen.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="business-about" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('business-about')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="business-about"></div>
           </div>
         </div>
 
@@ -7084,21 +7101,23 @@ function applyCustomTexts() {
 
 // Mapping: Bild-Key → CSS-Selector + CSS-Variable
 const IMAGE_TARGETS = {
-  'hero':       { selector: '.hero',              cssVar: '--hero-bg-url' },
-  'about-main': { selector: '.about-image',       cssVar: '--about-image-url' },
-  'quote1':     { selector: '.parallax-quote.q1', cssVar: '--quote-bg-url' },
-  'quote2':     { selector: '.parallax-quote.q2', cssVar: '--quote-bg-url' },
-  'quote3':     { selector: '.parallax-quote.q3', cssVar: '--quote-bg-url' },
-  'business':   { selector: '.business-hero',     cssVar: '--business-bg-url' }
+  'hero':           { selector: '.hero',                cssVar: '--hero-bg-url' },
+  'about-main':     { selector: '.about-image',         cssVar: '--about-image-url' },
+  'quote1':         { selector: '.parallax-quote.q1',   cssVar: '--quote-bg-url' },
+  'quote2':         { selector: '.parallax-quote.q2',   cssVar: '--quote-bg-url' },
+  'quote3':         { selector: '.parallax-quote.q3',   cssVar: '--quote-bg-url' },
+  'business':       { selector: '.business-hero',       cssVar: '--business-bg-url' },
+  'business-about': { selector: '.business-about-image', cssVar: '--business-about-url' }
 };
 
 const IMAGE_FALLBACKS = {
-  'hero':       'https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1920&q=80',
-  'about-main': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
-  'quote1':     'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80',
-  'quote2':     'https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80',
-  'quote3':     'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80',
-  'business':   'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1920&q=80'
+  'hero':           'https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1920&q=80',
+  'about-main':     'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+  'quote1':         'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80',
+  'quote2':         'https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80',
+  'quote3':         'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80',
+  'business':       'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1920&q=80',
+  'business-about': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80'
 };
 
 function applyCustomImages() {
