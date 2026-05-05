@@ -4512,7 +4512,7 @@ body.edit-mode-active [data-edit].edited::before {
           wir gemeinsam, ob und wie ich dich unterstützen kann.
         </p>
         <div class="business-cta-actions">
-          <a href="mailto:hello@soulbynici.ch?subject=Anfrage%20Business-Dienstleistungen" class="btn btn-primary">
+          <a href="mailto:hello@soulbynici.ch?subject=Anfrage%20Business-Dienstleistungen" class="btn btn-primary" id="businessCtaEmailBtn">
             <span data-edit="business-cta-email">E-Mail schreiben</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -5217,26 +5217,26 @@ body.edit-mode-active [data-edit].edited::before {
     <div class="legal-content">
       <h3>Verantwortlich für den Inhalt</h3>
       <p>
-        Nicole Zauta<br>
-        Soul by Nici<br>
-        Schweiz
+        <span data-edit="impressum-name">Nicole Zauta</span><br>
+        <span data-edit="impressum-firma">Soul by Nici</span><br>
+        <span data-edit="impressum-adresse">Schweiz</span>
       </p>
 
       <h3>Kontakt</h3>
       <p>
-        E-Mail: hello@soulbynici.ch<br>
-        Web: www.soulbynici.ch
+        E-Mail: <span data-edit="impressum-email">hello@soulbynici.ch</span><br>
+        Web: <span data-edit="impressum-web">www.soulbynici.ch</span>
       </p>
 
-      <h3>Haftungsausschluss</h3>
-      <p>Die Autorin übernimmt keinerlei Gewähr hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit der Informationen.</p>
-      <p>Haftungsansprüche gegen die Autorin wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen entstehen, werden ausgeschlossen.</p>
+      <h3 data-edit="impressum-h-haftung">Haftungsausschluss</h3>
+      <p data-edit="impressum-haftung-1">Die Autorin übernimmt keinerlei Gewähr hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit der Informationen.</p>
+      <p data-edit="impressum-haftung-2">Haftungsansprüche gegen die Autorin wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen entstehen, werden ausgeschlossen.</p>
 
-      <h3>Gesundheitlicher Hinweis</h3>
-      <p>Energiearbeit ersetzt keine ärztliche oder psychotherapeutische Behandlung. Bei körperlichen oder seelischen Beschwerden wende dich bitte an entsprechende Fachpersonen. Die angebotenen Sitzungen verstehen sich als ergänzende Begleitung auf deinem persönlichen Weg.</p>
+      <h3 data-edit="impressum-h-gesundheit">Gesundheitlicher Hinweis</h3>
+      <p data-edit="impressum-gesundheit">Energiearbeit ersetzt keine ärztliche oder psychotherapeutische Behandlung. Bei körperlichen oder seelischen Beschwerden wende dich bitte an entsprechende Fachpersonen. Die angebotenen Sitzungen verstehen sich als ergänzende Begleitung auf deinem persönlichen Weg.</p>
 
-      <h3>Urheberrecht</h3>
-      <p>Die Urheber- und alle anderen Rechte an Inhalten, Bildern, Fotos oder anderen Dateien auf dieser Website gehören ausschliesslich Nicole Zauta oder den speziell genannten Rechtsinhabern.</p>
+      <h3 data-edit="impressum-h-urheber">Urheberrecht</h3>
+      <p data-edit="impressum-urheber">Die Urheber- und alle anderen Rechte an Inhalten, Bildern, Fotos oder anderen Dateien auf dieser Website gehören ausschliesslich Nicole Zauta oder den speziell genannten Rechtsinhabern.</p>
     </div>
   </div>
 </div>
@@ -5245,33 +5245,32 @@ body.edit-mode-active [data-edit].edited::before {
 <div class="modal-overlay" id="datenschutzModal">
   <div class="modal modal-large">
     <button class="modal-close" onclick="closeModal('datenschutzModal')">×</button>
-    <h2>Datenschutzerklärung</h2>
-    <p class="modal-subtitle">Gemäss Schweizer Datenschutzgesetz (revDSG)</p>
+    <h2 data-edit="dsg-title">Datenschutzerklärung</h2>
+    <p class="modal-subtitle" data-edit="dsg-subtitle">Gemäss Schweizer Datenschutzgesetz (revDSG)</p>
     <div class="legal-content">
       <p style="font-size:0.85rem; color:var(--text-muted);">
         Letzte Aktualisierung: <span id="dsgDate"></span>
       </p>
 
-      <h3>1. Verantwortliche Stelle</h3>
-      <p>
-        Nicole Zauta · Soul by Nici<br>
-        Schweiz<br>
-        E-Mail: hello@soulbynici.ch
+      <h3 data-edit="dsg-h1">1. Verantwortliche Stelle</h3>
+      <p data-edit="dsg-p1a">
+        <span data-edit="dsg-name">Nicole Zauta · Soul by Nici</span><br>
+        <span data-edit="dsg-adresse">Schweiz</span><br>
+        E-Mail: <span data-edit="dsg-email">hello@soulbynici.ch</span>
       </p>
-      <p>Für alle Fragen rund um den Datenschutz bin ich deine direkte Ansprechperson.</p>
+      <p data-edit="dsg-p1b">Für alle Fragen rund um den Datenschutz bin ich deine direkte Ansprechperson.</p>
 
-      <h3>2. Welche Daten ich bearbeite</h3>
-      <p>Ich bearbeite ausschliesslich Personendaten, die du mir aktiv mitteilst:</p>
-      <ul>
+      <h3 data-edit="dsg-h2">2. Welche Daten ich bearbeite</h3>
+      <p data-edit="dsg-p2-intro">Ich bearbeite ausschliesslich Personendaten, die du mir aktiv mitteilst:</p>
+      <ul data-edit="dsg-l2">
         <li><strong>Bei einer Buchung:</strong> Vor- und Nachname, E-Mail-Adresse, Telefonnummer, allfällige Notizen, Datum und Zeit der gebuchten Sitzung.</li>
-        <li><strong>Bei der Registrierung eines Kontos:</strong> Name und E-Mail (lokal in deinem Browser gespeichert, nicht auf einem zentralen Server).</li>
         <li><strong>Bei der Newsletter-Anmeldung:</strong> deine E-Mail-Adresse.</li>
         <li><strong>Bei einer Sitzung:</strong> ggf. Notizen zur Begleitung (siehe Abschnitt 4).</li>
       </ul>
 
-      <h3>3. Wozu ich diese Daten bearbeite</h3>
-      <p>Die Bearbeitung erfolgt ausschliesslich zu folgenden Zwecken:</p>
-      <ul>
+      <h3 data-edit="dsg-h3">3. Wozu ich diese Daten bearbeite</h3>
+      <p data-edit="dsg-p3-intro">Die Bearbeitung erfolgt ausschliesslich zu folgenden Zwecken:</p>
+      <ul data-edit="dsg-l3">
         <li>Durchführung deiner Buchung und Sitzung</li>
         <li>Kommunikation mit dir (Bestätigung, Erinnerung, Nachfragen)</li>
         <li>Versand des Newsletters – falls du dich eingetragen hast</li>
@@ -5279,74 +5278,77 @@ body.edit-mode-active [data-edit].edited::before {
         <li>Qualität meiner Begleitung über mehrere Sitzungen hinweg (interne Notizen)</li>
       </ul>
 
-      <h3>4. Sitzungsnotizen</h3>
-      <p>
+      <h3 data-edit="dsg-h4">4. Sitzungsnotizen</h3>
+      <p data-edit="dsg-p4">
         Zur Qualität meiner Begleitung führe ich nach Sitzungen interne Notizen über deine Anliegen und unseren
         Prozess. Diese Notizen sind streng vertraulich, werden ausschliesslich von mir geführt und niemals weitergegeben.
         Auf Anfrage gewähre ich dir Einsicht in die zu deiner Person geführten Notizen.
       </p>
 
-      <h3>5. Online-Sitzungen</h3>
-      <p>
+      <h3 data-edit="dsg-h5">5. Online-Sitzungen</h3>
+      <p data-edit="dsg-p5a">
         Sitzungen finden online über einen Videocall-Dienst statt. Bei der Teilnahme werden technische Daten
         (IP-Adresse, Geräteinformationen, Audio-/Video-Streams) sowie dein Name durch den jeweiligen Anbieter bearbeitet.
         Den genauen Anbieter und dessen Datenschutzbedingungen teile ich dir mit dem Zugangslink mit, sodass du dich vor
         der Sitzung damit vertraut machen kannst.
       </p>
-      <p>
+      <p data-edit="dsg-p5b">
         Die Sitzungen werden von meiner Seite <strong>nicht aufgezeichnet</strong>, sofern du dem nicht
         ausdrücklich vorab zustimmst.
       </p>
 
-      <h3>6. Cookies und lokale Speicherung</h3>
-      <p>
+      <h3 data-edit="dsg-h6">6. Cookies und lokale Speicherung</h3>
+      <p data-edit="dsg-p6">
         Diese Webseite verwendet ausschliesslich technisch notwendige Cookies und lokalen Browserspeicher
-        (localStorage), um dein Konto, deinen Buchungsfortschritt und deine Präferenzen (z.B. Farb-Stimmung)
+        (localStorage), um deinen Buchungsfortschritt und deine Präferenzen (z.B. Farb-Stimmung)
         zu speichern. Es findet <strong>kein Tracking, kein Analytics und keine Werbung</strong> statt.
       </p>
 
-      <h3>7. Externe Dienste</h3>
-      <ul>
+      <h3 data-edit="dsg-h7">7. Externe Dienste</h3>
+      <ul data-edit="dsg-l7">
         <li><strong>Videocall-Anbieter</strong> – für Online-Sitzungen, siehe Abschnitt 5</li>
-        <li><strong>Google Fonts</strong> – Schriftarten werden in der Regel lokal geladen</li>
+        <li><strong>Supabase</strong> (EU/Frankfurt) – für die Speicherung von Buchungs- und Klient*innen-Daten</li>
+        <li><strong>Resend</strong> (USA) – für den Versand von Buchungs-Bestätigungen per E-Mail</li>
+        <li><strong>Vercel</strong> (USA/EU) – für das Hosting der Webseite</li>
+        <li><strong>Google Fonts</strong> – Schriftarten werden über das CDN geladen</li>
         <li><strong>Unsplash</strong> – Bilder werden über deren CDN ausgeliefert</li>
       </ul>
 
-      <h3>8. Deine Rechte</h3>
-      <p>Nach revidiertem Schweizer Datenschutzgesetz (revDSG) hast du folgende Rechte:</p>
-      <ul>
+      <h3 data-edit="dsg-h8">8. Deine Rechte</h3>
+      <p data-edit="dsg-p8-intro">Nach revidiertem Schweizer Datenschutzgesetz (revDSG) hast du folgende Rechte:</p>
+      <ul data-edit="dsg-l8">
         <li><strong>Auskunftsrecht:</strong> Welche Daten habe ich über dich gespeichert?</li>
         <li><strong>Berichtigungsrecht:</strong> Korrektur unrichtiger Daten</li>
         <li><strong>Löschrecht:</strong> Löschung deiner Daten (soweit keine gesetzliche Aufbewahrungspflicht entgegensteht)</li>
         <li><strong>Widerruf:</strong> Widerruf einer erteilten Einwilligung jederzeit möglich</li>
         <li><strong>Datenübertragbarkeit:</strong> Erhalt deiner Daten in einem gängigen Format</li>
       </ul>
-      <p>Eine kurze E-Mail an hello@soulbynici.ch genügt.</p>
+      <p data-edit="dsg-p8-foot">Eine kurze E-Mail an <span data-edit="dsg-rights-email">hello@soulbynici.ch</span> genügt.</p>
 
-      <h3>9. Aufbewahrungsdauer</h3>
-      <ul>
+      <h3 data-edit="dsg-h9">9. Aufbewahrungsdauer</h3>
+      <ul data-edit="dsg-l9">
         <li>Buchungsdaten: 10 Jahre (gesetzliche Aufbewahrungsfrist)</li>
         <li>Sitzungsnotizen: solange die Begleitung läuft, max. 5 Jahre nach letzter Sitzung</li>
         <li>Newsletter-Daten: bis zu deiner Abmeldung</li>
         <li>Lokale Browserdaten: bis du sie selbst löschst</li>
       </ul>
 
-      <h3>10. Datensicherheit</h3>
-      <p>
+      <h3 data-edit="dsg-h10">10. Datensicherheit</h3>
+      <p data-edit="dsg-p10">
         Ich treffe angemessene technische und organisatorische Massnahmen, um deine Daten vor unberechtigtem
         Zugriff, Verlust oder Missbrauch zu schützen. Vollständige Sicherheit bei der Übertragung über das
         Internet ist allerdings technisch nicht möglich.
       </p>
 
-      <h3>11. Aufsichtsbehörde</h3>
-      <p>
+      <h3 data-edit="dsg-h11">11. Aufsichtsbehörde</h3>
+      <p data-edit="dsg-p11">
         Du hast das Recht, dich beim <strong>Eidgenössischen Datenschutz- und Öffentlichkeitsbeauftragten (EDÖB)</strong>
         zu beschweren, falls du der Meinung bist, dass die Bearbeitung deiner Personendaten gegen das DSG verstösst:
         <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>
       </p>
 
-      <h3>12. Änderungen dieser Erklärung</h3>
-      <p>
+      <h3 data-edit="dsg-h12">12. Änderungen dieser Erklärung</h3>
+      <p data-edit="dsg-p12">
         Ich behalte mir vor, diese Datenschutzerklärung jederzeit anzupassen, um sie an geänderte rechtliche
         Anforderungen oder Funktionen meiner Webseite anzupassen. Massgebend ist die zum Zeitpunkt der Bearbeitung
         gültige Fassung.
@@ -5564,8 +5566,31 @@ const Cloud = {
     const { data, error } = await this.client.from('public_taken_slots').select('*');
     if (error) { console.error('[Cloud.getTakenSlots]', error); return []; }
     return data || [];
+  },
+
+  // ---- Edge Function aufrufen ----
+  async invokeFunction(name, body) {
+    if (!this.ready) throw new Error('Backend nicht konfiguriert');
+    const { data, error } = await this.client.functions.invoke(name, { body });
+    if (error) throw error;
+    return data;
   }
 };
+
+/**
+ * Schickt nach erfolgreicher Buchung Bestätigungs-Mails.
+ * Blockt den UI-Flow nicht (fire-and-forget, Fehler nur in Console).
+ */
+function sendBookingEmail(bookingIds) {
+  if (!Cloud.ready || !bookingIds || bookingIds.length === 0) return;
+  Cloud.invokeFunction('send-booking-email', { booking_ids: bookingIds })
+    .then(res => {
+      console.log('[sendBookingEmail] OK', res);
+    })
+    .catch(err => {
+      console.warn('[sendBookingEmail] Fehler (Buchung wurde trotzdem gespeichert)', err);
+    });
+}
 
 /* ============================================
    STORAGE (localStorage als Cache)
@@ -6500,10 +6525,10 @@ const PLATFORMS = {
 const DEFAULT_LINKS = [
   { id: 'booking', platform: 'booking', enabled: true, url: '#booking', subtitle: 'Online-Kalender' },
   { id: 'instagram', platform: 'instagram', enabled: true, url: 'https://instagram.com/soulbynici', subtitle: '@soulbynici' },
-  { id: 'whatsapp', platform: 'whatsapp', enabled: true, url: 'https://wa.me/41000000000', subtitle: 'Direkt schreiben' },
+  { id: 'whatsapp', platform: 'whatsapp', enabled: false, url: '', subtitle: 'Direkt schreiben' },
   { id: 'email', platform: 'email', enabled: true, url: 'mailto:hello@soulbynici.ch', subtitle: 'hello@soulbynici.ch' },
   { id: 'newsletter', platform: 'newsletter', enabled: true, url: '#newsletter-section', subtitle: 'Sanfte Impulse abonnieren' },
-  { id: 'phone', platform: 'phone', enabled: false, url: 'tel:+41000000000', subtitle: 'Mo–Fr · 9–19 Uhr' },
+  { id: 'phone', platform: 'phone', enabled: false, url: '', subtitle: 'Auf Vereinbarung' },
   { id: 'tiktok', platform: 'tiktok', enabled: false, url: 'https://www.tiktok.com/@soulbynici', subtitle: '@soulbynici' },
   { id: 'youtube', platform: 'youtube', enabled: false, url: '', subtitle: '' },
   { id: 'spotify', platform: 'spotify', enabled: false, url: '', subtitle: 'Podcast / Playlists' },
@@ -6716,13 +6741,24 @@ function applyCustomImages() {
         el.style.removeProperty(target.cssVar);
       }
     }
-    // Preview im Admin-Tab
     const preview = document.querySelector(`[data-preview="${key}"]`);
     if (preview) {
       const url = custom[`image:${key}`] || IMAGE_FALLBACKS[key];
       preview.style.backgroundImage = `url("${url}")`;
     }
   });
+
+  // Business-CTA-Mail-Button: Mail aus Email-Link übernehmen
+  const emailBtn = document.getElementById('businessCtaEmailBtn');
+  if (emailBtn) {
+    const links = getLinks();
+    const emailLink = links.find(l => l.id === 'email' && l.enabled);
+    if (emailLink && emailLink.url) {
+      // url ist wie "mailto:hello@soulbynici.ch" → mit Subject erweitern
+      const baseUrl = emailLink.url.split('?')[0]; // entfernt evtl. existierenden Subject
+      emailBtn.href = baseUrl + '?subject=' + encodeURIComponent('Anfrage Business-Dienstleistungen');
+    }
+  }
 }
 
 /**
@@ -6839,7 +6875,8 @@ function toggleEditMode() {
 }
 
 function activateEditMode() {
-  if (!Storage.get('adminLoggedIn')) {
+  const isAdmin = Cloud.ready ? Cloud.isAuth() : !!Storage.get('adminLoggedIn');
+  if (!isAdmin) {
     showToast('Nur als Admin verfügbar.');
     return;
   }
@@ -8418,6 +8455,9 @@ async function submitBooking(e) {
 
       showPackConfirmation(newBookings);
 
+      // E-Mail-Bestätigung an Klient*in + Admin senden (best-effort, blockt nicht)
+      sendBookingEmail(newBookings.map(b => b.id));
+
       document.getElementById('bookingForm').reset();
       document.getElementById('termsCheckboxWrap').classList.remove('invalid');
       document.getElementById('privacyCheckboxWrap').classList.remove('invalid');
@@ -8465,6 +8505,9 @@ async function submitBooking(e) {
       };
 
       showConfirmation(booking);
+
+      // E-Mail-Bestätigung an Klient*in + Admin senden
+      sendBookingEmail([booking.id]);
 
       document.getElementById('bookingForm').reset();
       document.getElementById('termsCheckboxWrap').classList.remove('invalid');
