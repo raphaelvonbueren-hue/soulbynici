@@ -9,16 +9,20 @@
 
 <!-- ===========================================
      SUPABASE-KONFIGURATION
-     Vor dem Deployment hier deine Werte aus
-     Supabase → Settings → API einsetzen.
-     Beide Werte sind PUBLIC und sicher zu exposen
-     (Schutz erfolgt über Row-Level-Security).
+     Wird zur Build-Zeit von Vercel aus den
+     Environment Variables generiert (siehe vercel.json).
+     Falls config.js fehlt, fallen wir auf die Werte
+     im Inline-Script unten zurück.
      =========================================== -->
+<script src="/config.js"></script>
 <script>
-  window.SUPABASE_CONFIG = {
-    url: 'https://zaieumbmfksnfzbzqqln.supabase.co',          // z.B. https://abcdefgh.supabase.co
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphaWV1bWJtZmtzbmZ6YnpxcWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MDIyODgsImV4cCI6MjA5MzQ3ODI4OH0.gaQHJEpcnfmjVfLFcVZUVC_6KB2byqmILxTPNi-Bw68'  // langer eyJhbGc... String
-  };
+  // Fallback nur wenn config.js nicht geladen wurde
+  if (!window.SUPABASE_CONFIG) {
+    window.SUPABASE_CONFIG = {
+      url: 'YOUR_SUPABASE_URL',
+      anonKey: 'YOUR_SUPABASE_ANON_KEY'
+    };
+  }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta property="og:title" content="Soul by Nici · Energiearbeit & Selbstverbindung">
@@ -173,12 +177,26 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border: 1px solid var(--border);
   color: var(--text);
   transition: all var(--transition);
+  position: relative;
 }
 .btn-icon:hover {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
   transform: scale(1.05);
+}
+.user-btn-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #6cc070;
+  border: 2px solid var(--bg);
+  display: none;
+}
+#userBtn.logged-in .user-btn-dot { display: block; }
+#userBtn.logged-in {
+  border-color: var(--primary);
 }
 .nav-toggle {
   display: none;
@@ -1929,6 +1947,13 @@ footer .brand {
 }
 .modal-overlay.active .modal { transform: translateY(0); }
 .modal-large { max-width: 680px; }
+.modal-xlarge {
+  max-width: 1100px;
+  padding: 2.5rem 3rem;
+}
+@media (max-width: 1180px) {
+  .modal-xlarge { max-width: 95vw; padding: 2rem 1.5rem; }
+}
 .modal-close {
   position: absolute;
   top: 1rem; right: 1rem;
@@ -3133,19 +3158,22 @@ footer .brand {
   overflow: hidden;
 }
 .parallax-quote.q1 {
+  --quote-bg-url: url('https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80');
   background-image:
     linear-gradient(180deg, rgba(41, 56, 74, 0.5), rgba(41, 56, 74, 0.72)),
-    url('https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80');
+    var(--quote-bg-url);
 }
 .parallax-quote.q2 {
+  --quote-bg-url: url('https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80');
   background-image:
     linear-gradient(180deg, rgba(31, 50, 70, 0.55), rgba(31, 50, 70, 0.78)),
-    url('https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80');
+    var(--quote-bg-url);
 }
 .parallax-quote.q3 {
+  --quote-bg-url: url('https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80');
   background-image:
     linear-gradient(180deg, rgba(41, 56, 74, 0.5), rgba(45, 58, 70, 0.75)),
-    url('https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80');
+    var(--quote-bg-url);
 }
 .parallax-quote-inner {
   max-width: 760px;
@@ -3220,9 +3248,10 @@ footer .brand {
    ABOUT SECTION VERFEINERT
    ============================================ */
 .about-image {
+  --about-image-url: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80');
   background:
     linear-gradient(160deg, rgba(176, 137, 104, 0.3), rgba(79, 108, 126, 0.55)),
-    url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80') center/cover;
+    var(--about-image-url) center/cover;
   position: relative;
   aspect-ratio: 3/4;
   border-radius: 200px 200px 12px 12px;
@@ -3837,6 +3866,144 @@ body.edit-mode-active [data-edit].edited::before {
 }
 
 /* ============================================
+   ADMIN: ANGEBOTE/SESSION TYPES
+   ============================================ */
+.admin-offer-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 0.8rem;
+}
+.admin-offer-item.featured {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+.admin-offer-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+.admin-offer-item-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.admin-offer-item-id {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+}
+.admin-offer-item-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+.admin-offer-item-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.admin-offer-edit {
+  display: none;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.admin-offer-edit.active { display: block; }
+.admin-offer-edit .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+.admin-offer-edit textarea {
+  min-height: 60px;
+}
+
+/* ============================================
+   IMAGE MANAGER (Admin)
+   ============================================ */
+.image-manager-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.image-manager-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1.5rem;
+  align-items: flex-start;
+  background: var(--bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.image-manager-preview {
+  width: 200px;
+  aspect-ratio: 3/4;
+  background-color: var(--bg-alt);
+  background-size: cover;
+  background-position: center;
+  border-radius: 100px 100px 8px 8px;
+  border: 1px solid var(--border);
+}
+.image-manager-preview.wide {
+  width: 200px;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-sm);
+}
+.image-manager-info { min-width: 0; }
+.image-manager-info h5 {
+  font-family: inherit;
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+  color: var(--text);
+}
+.image-manager-info p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+.image-manager-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.image-manager-buttons label {
+  cursor: pointer;
+}
+.image-manager-status {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  min-height: 1.2em;
+}
+
+@media (max-width: 700px) {
+  .image-manager-row {
+    grid-template-columns: 1fr;
+  }
+  .image-manager-preview {
+    width: 160px;
+    margin: 0 auto;
+  }
+  .image-manager-preview.wide {
+    width: 100%;
+  }
+}
+
+/* ============================================
    MOBILE FIX für fixed backgrounds
    (iOS unterstützt background-attachment:fixed nicht)
    ============================================ */
@@ -3882,11 +4049,12 @@ body.edit-mode-active [data-edit].edited::before {
       <li><a onclick="scrollToSection('contact')">Kontakt</a></li>
     </ul>
     <div class="nav-actions">
-      <button class="btn-icon" id="userBtn" title="Mein Konto" onclick="openUserArea()">
+      <button class="btn-icon" id="userBtn" title="Admin-Bereich" onclick="openUserArea()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="8" r="4"/>
           <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
         </svg>
+        <span class="user-btn-dot" id="userBtnDot"></span>
       </button>
       <button class="nav-toggle" id="navToggle" aria-label="Menü">
         <span></span><span></span><span></span>
@@ -4023,65 +4191,7 @@ body.edit-mode-active [data-edit].edited::before {
       <h2 data-edit="offers-h2">Was ich für dich <em>bereithalte</em></h2>
       <p data-edit="offers-lead">Ob du einmalig durchatmen oder einen tieferen Prozess beginnen möchtest – wähle das Angebot, das sich für dich stimmig anfühlt.</p>
     </div>
-    <div class="offers-grid">
-      <div class="offer-card reveal">
-        <div class="offer-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <h3 data-edit="offer1-title">Einzelsitzung</h3>
-        <p class="offer-desc" data-edit="offer1-desc">Eine tiefe Sitzung, in der wir gemeinsam dort hinhören, wo deine Seele Heilung sucht.</p>
-        <ul class="offer-features">
-          <li class="offer-feature" data-edit="offer1-f1">90 Minuten Sitzung</li>
-          <li class="offer-feature" data-edit="offer1-f2">Persönliches Vorgespräch</li>
-          <li class="offer-feature" data-edit="offer1-f3">Energiearbeit & Begleitung</li>
-          <li class="offer-feature" data-edit="offer1-f4">Nachgespräch zur Integration</li>
-        </ul>
-        <div class="offer-price">
-          <span class="offer-price-currency">CHF</span><span data-edit="offer1-price">180</span>
-          <span class="offer-price-unit" data-edit="offer1-unit">/ Sitzung</span>
-        </div>
-        <button class="btn btn-secondary btn-block" onclick="goToBooking('single')" data-edit="offer1-cta">Termin auswählen</button>
-      </div>
-
-      <div class="offer-card featured reveal">
-        <div class="offer-badge" data-edit="offer2-badge">Beliebt</div>
-        <div class="offer-icon">
-          <svg viewBox="0 0 24 24"><path d="M3 12c0-5 4-9 9-9s9 4 9 9-4 9-9 9-9-4-9-9z"/><path d="M8 12l3 3 5-6"/></svg>
-        </div>
-        <h3 data-edit="offer2-title">4er Paket</h3>
-        <p class="offer-desc" data-edit="offer2-desc">Ein vertiefender Prozess über vier Sitzungen – für nachhaltige Veränderung und tiefe Wandlung.</p>
-        <ul class="offer-features">
-          <li class="offer-feature" data-edit="offer2-f1">4 × 90 Minuten Sitzungen</li>
-          <li class="offer-feature" data-edit="offer2-f2">Alle 4 Termine direkt buchen</li>
-          <li class="offer-feature" data-edit="offer2-f3">Begleitung zwischen den Sitzungen</li>
-          <li class="offer-feature" data-edit="offer2-f4">Sparen gegenüber Einzelpreis</li>
-        </ul>
-        <div class="offer-price">
-          <span class="offer-price-currency">CHF</span><span data-edit="offer2-price">640</span>
-          <span class="offer-price-unit" data-edit="offer2-unit">statt 720</span>
-        </div>
-        <button class="btn btn-ghost btn-block" onclick="goToBooking('pack4')" data-edit="offer2-cta">4 Termine buchen</button>
-      </div>
-
-      <div class="offer-card reveal">
-        <div class="offer-icon">
-          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        </div>
-        <h3 data-edit="offer3-title">Kennenlernen</h3>
-        <p class="offer-desc" data-edit="offer3-desc">Ein unverbindliches 30-minütiges Gespräch, um zu spüren, ob wir auf einer Wellenlänge sind.</p>
-        <ul class="offer-features">
-          <li class="offer-feature" data-edit="offer3-f1">30 Minuten online</li>
-          <li class="offer-feature" data-edit="offer3-f2">Deine Fragen, mein Hinhören</li>
-          <li class="offer-feature" data-edit="offer3-f3">Klarheit über den nächsten Schritt</li>
-          <li class="offer-feature" data-edit="offer3-f4">Vollständig kostenfrei</li>
-        </ul>
-        <div class="offer-price">
-          <span class="offer-price-currency">CHF</span><span data-edit="offer3-price">0</span>
-          <span class="offer-price-unit" data-edit="offer3-unit">/ kostenlos</span>
-        </div>
-        <button class="btn btn-secondary btn-block" onclick="goToBooking('kennenlernen')" data-edit="offer3-cta">Gespräch buchen</button>
-      </div>
-    </div>
+    <div class="offers-grid" id="offersGrid"></div>
   </div>
 </section>
 
@@ -4477,7 +4587,6 @@ body.edit-mode-active [data-edit].edited::before {
     <a onclick="openModal('impressumModal')">Impressum</a>
     <a onclick="openModal('datenschutzModal')">Datenschutz</a>
     <a onclick="openModal('cookieSettingsModal')">Cookie-Einstellungen</a>
-    <a onclick="openAdminLogin()" style="opacity:0.5">Admin</a>
   </div>
   <p style="margin-top:1.5rem; font-size:0.78rem;">© <span id="year"></span> Nicole Zauta · Soul by Nici · Mit Liebe gemacht in der Schweiz</p>
 </footer>
@@ -4606,7 +4715,7 @@ body.edit-mode-active [data-edit].edited::before {
 
 <!-- ADMIN PANEL MODAL -->
 <div class="modal-overlay" id="adminPanelModal">
-  <div class="modal modal-large">
+  <div class="modal modal-xlarge">
     <button class="modal-close" onclick="closeModal('adminPanelModal')">×</button>
     <h2>Admin-Panel</h2>
     <p class="modal-subtitle">Verwalte deine Webseite</p>
@@ -4616,7 +4725,9 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="bookings" onclick="switchAdminTab(event,'bookings')">Buchungen</button>
       <button class="admin-tab" data-panel="clients" onclick="switchAdminTab(event,'clients')">Klient*innen</button>
       <button class="admin-tab" data-panel="schedule" onclick="switchAdminTab(event,'schedule')">Verfügbarkeit</button>
+      <button class="admin-tab" data-panel="offers" onclick="switchAdminTab(event,'offers')">Angebote</button>
       <button class="admin-tab" data-panel="texts" onclick="switchAdminTab(event,'texts')">Texte</button>
+      <button class="admin-tab" data-panel="images" onclick="switchAdminTab(event,'images')">Bilder</button>
       <button class="admin-tab" data-panel="links" onclick="switchAdminTab(event,'links')">Links</button>
       <button class="admin-tab" data-panel="themes" onclick="switchAdminTab(event,'themes')">Farben</button>
       <button class="admin-tab" data-panel="testimonials" onclick="switchAdminTab(event,'testimonials')">Stimmen</button>
@@ -4825,6 +4936,22 @@ body.edit-mode-active [data-edit].edited::before {
       </div>
     </div>
 
+    <!-- ANGEBOTE / SESSION TYPES -->
+    <div class="admin-panel" id="panel-offers">
+      <h4 class="admin-section-label">Deine Angebote / Sitzungstypen</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1.5rem; line-height:1.6;">
+        Hier verwaltest du, was Klient*innen buchen können — Name, Preis, Dauer, Beschreibung. Änderungen erscheinen sofort auf der Webseite (Angebots-Karten und Buchungs-Tool).
+      </p>
+      <div id="adminOffersList"></div>
+      <div class="admin-actions" style="margin-top:1.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="addNewSessionType()">+ Neues Angebot hinzufügen</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetSessionTypesToDefault()">Auf Standard zurücksetzen</button>
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:1.2rem; line-height:1.5;">
+        <strong>Hinweis:</strong> Die IDs „kennenlernen", „single", „pack4" sollten nicht geändert werden, da sie spezielle Logik triggern (z.B. atomare 4er-Paket-Buchung). Du kannst beliebige weitere Angebote hinzufügen.
+      </p>
+    </div>
+
     <!-- TEXTS -->
     <div class="admin-panel" id="panel-texts">
       <h4 class="admin-section-label">Visual Text-Editor</h4>
@@ -4849,6 +4976,82 @@ body.edit-mode-active [data-edit].edited::before {
       <div class="text-overrides-list" id="textOverridesList"></div>
       <div class="admin-actions">
         <button class="btn btn-secondary btn-sm" onclick="resetAllEdits()">Alle Texte auf Original zurücksetzen</button>
+      </div>
+    </div>
+
+    <!-- BILDER -->
+    <div class="admin-panel" id="panel-images">
+      <h4 class="admin-section-label">Bilder verwalten</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1.5rem; line-height:1.6;">
+        Hier kannst du die Bilder auf deiner Webseite austauschen. Empfohlen: hochwertige Fotos, mindestens 1200px Breite.
+      </p>
+
+      <div class="image-manager-grid">
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview" data-preview="about-main"></div>
+          <div class="image-manager-info">
+            <h5>Über-mich-Bild</h5>
+            <p>Erscheint in der „Über mich"-Sektion neben deinem Text. Hochkant (3:4) am besten.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="about-main" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('about-main')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="about-main"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview wide" data-preview="quote1"></div>
+          <div class="image-manager-info">
+            <h5>Quote-Bild 1 (nach „Über mich")</h5>
+            <p>Großes Hintergrundbild mit Zitat. Querformat, Vollbild.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="quote1" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('quote1')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="quote1"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview wide" data-preview="quote2"></div>
+          <div class="image-manager-info">
+            <h5>Quote-Bild 2 (nach „Stimmen")</h5>
+            <p>Großes Hintergrundbild mit Zitat. Querformat.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="quote2" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('quote2')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="quote2"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview wide" data-preview="quote3"></div>
+          <div class="image-manager-info">
+            <h5>Quote-Bild 3 (nach „FAQ")</h5>
+            <p>Großes Hintergrundbild mit Zitat. Querformat.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="quote3" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('quote3')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="quote3"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -5335,6 +5538,17 @@ const Cloud = {
       const textsObj = {};
       texts.forEach(t => { textsObj[t.text_key] = t.content; });
       Storage.set('customTexts', textsObj);
+
+      // Sitzungstypen aus Config-Key
+      const cfgKey = textsObj['config:sessionTypes'];
+      if (cfgKey) {
+        try {
+          const parsed = JSON.parse(cfgKey);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            Storage.set('sessionTypes', parsed);
+          }
+        } catch(e) { console.error('sessionTypes-Config parse error', e); }
+      }
 
       if (settings[0] && settings[0].availability) {
         Storage.set('availability', settings[0].availability);
@@ -5857,19 +6071,22 @@ function logout() {
 }
 
 function openUserArea() {
-  const user = getCurrentUser();
-  if (user) openDashboard();
-  else openModal('loginModal');
+  // Super-Admin-Zugang oben rechts: direkt Admin-Login/-Panel
+  if (Cloud.ready && Cloud.isAuth()) {
+    openAdminPanel();
+  } else {
+    openModal('adminLoginModal');
+  }
 }
 
 function openDashboard() {
+  // Legacy User-Dashboard – wird aktuell nicht mehr verwendet (Admin ist Super-User)
   const user = getCurrentUser();
   if (!user) return;
   document.getElementById('dashName').textContent = 'Hallo ' + user.name.split(' ')[0];
   document.getElementById('dashEmail').textContent = user.email;
   document.getElementById('dashAvatar').textContent = user.name.charAt(0).toUpperCase();
 
-  // Buchungen aus zentralem Bookings-Store nach E-Mail filtern
   const allBookings = getBookings();
   const myBookings = allBookings
     .filter(b => b.customer && b.customer.email && b.customer.email.toLowerCase() === user.email.toLowerCase())
@@ -6131,6 +6348,12 @@ function switchAdminTab(e, panel) {
     renderTextOverridesList();
     const countEl = document.getElementById('textOverridesCount');
     if (countEl) countEl.textContent = Object.keys(getCustomTexts()).length;
+  }
+  if (target === 'images') {
+    applyCustomImages();
+  }
+  if (target === 'offers') {
+    renderAdminOffersList();
   }
 }
 
@@ -6462,6 +6685,132 @@ function applyCustomTexts() {
       el.classList.remove('edited');
     }
   });
+  // Bilder: Custom-Image für About-Sektion anwenden
+  applyCustomImages();
+}
+
+// Mapping: Bild-Key → CSS-Selector + CSS-Variable
+const IMAGE_TARGETS = {
+  'about-main': { selector: '.about-image',       cssVar: '--about-image-url' },
+  'quote1':     { selector: '.parallax-quote.q1', cssVar: '--quote-bg-url' },
+  'quote2':     { selector: '.parallax-quote.q2', cssVar: '--quote-bg-url' },
+  'quote3':     { selector: '.parallax-quote.q3', cssVar: '--quote-bg-url' }
+};
+
+const IMAGE_FALLBACKS = {
+  'about-main': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+  'quote1':     'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80',
+  'quote2':     'https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80',
+  'quote3':     'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80'
+};
+
+function applyCustomImages() {
+  const custom = getCustomTexts();
+  Object.entries(IMAGE_TARGETS).forEach(([key, target]) => {
+    const el = document.querySelector(target.selector);
+    if (el) {
+      const customUrl = custom[`image:${key}`];
+      if (customUrl) {
+        el.style.setProperty(target.cssVar, `url("${customUrl}")`);
+      } else {
+        el.style.removeProperty(target.cssVar);
+      }
+    }
+    // Preview im Admin-Tab
+    const preview = document.querySelector(`[data-preview="${key}"]`);
+    if (preview) {
+      const url = custom[`image:${key}`] || IMAGE_FALLBACKS[key];
+      preview.style.backgroundImage = `url("${url}")`;
+    }
+  });
+}
+
+/**
+ * Bild komprimieren: max 1600px Kante, ~80% JPEG.
+ */
+async function compressImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageOverride(event) {
+  const input = event.target;
+  const key = input.getAttribute('data-image-key');
+  const file = input.files[0];
+  if (!file || !key) return;
+
+  const status = document.querySelector(`[data-status="${key}"]`);
+  if (status) status.textContent = 'Komprimiere Bild …';
+
+  try {
+    let dataUrl = await compressImage(file, 1600, 0.82);
+    let sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+
+    if (sizeKB > 800) {
+      if (status) status.textContent = 'Bild ist gross, komprimiere stärker …';
+      dataUrl = await compressImage(file, 1200, 0.7);
+    }
+
+    await saveImageOverride(`image:${key}`, dataUrl);
+    if (status) {
+      status.textContent = '✓ Gespeichert';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    }
+  } catch (err) {
+    console.error(err);
+    if (status) status.textContent = 'Fehler: ' + (err.message || 'Upload fehlgeschlagen');
+  } finally {
+    input.value = ''; // damit gleiches File später wieder triggert
+  }
+}
+
+async function saveImageOverride(key, dataUrl) {
+  const custom = getCustomTexts();
+  custom[key] = dataUrl;
+  setCustomTexts(custom);
+  applyCustomImages();
+  if (Cloud.ready && Cloud.isAuth()) {
+    await Cloud.upsertOne('site_texts', { text_key: key, content: dataUrl }, 'text_key');
+  }
+}
+
+async function resetImageOverride(key) {
+  if (!confirm('Bild auf Original zurücksetzen?')) return;
+  const status = document.querySelector(`[data-status="${key}"]`);
+  const fullKey = `image:${key}`;
+  const custom = getCustomTexts();
+  delete custom[fullKey];
+  setCustomTexts(custom);
+  applyCustomImages();
+  if (Cloud.ready && Cloud.isAuth()) {
+    try {
+      await Cloud.deleteOne('site_texts', 'text_key', fullKey);
+    } catch (err) { console.error(err); }
+  }
+  if (status) {
+    status.textContent = '✓ Zurückgesetzt';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  }
 }
 
 /**
@@ -6469,9 +6818,16 @@ function applyCustomTexts() {
  */
 function updateEditFabVisibility() {
   const fab = document.getElementById('editFab');
-  if (!fab) return;
   const isAdmin = Cloud.ready ? Cloud.isAuth() : !!Storage.get('adminLoggedIn');
-  fab.classList.toggle('visible', isAdmin);
+  if (fab) {
+    fab.classList.toggle('visible', isAdmin);
+  }
+  // User-Icon oben rechts
+  const userBtn = document.getElementById('userBtn');
+  if (userBtn) {
+    userBtn.classList.toggle('logged-in', isAdmin);
+    userBtn.title = isAdmin ? 'Admin-Panel öffnen' : 'Admin-Bereich';
+  }
   if (!isAdmin && EditMode.active) {
     deactivateEditMode();
   }
@@ -7123,11 +7479,303 @@ async function deleteCurrentClient() {
 /* ============================================
    BOOKING SYSTEM (eigenständig)
    ============================================ */
-const SESSION_TYPES = [
-  { id: 'kennenlernen', name: 'Kennenlerngespräch', duration: 30, price: 0, priceLabel: 'kostenlos', description: '30 Min. unverbindlich · online' },
-  { id: 'single', name: 'Einzelsitzung', duration: 90, price: 180, priceLabel: 'CHF 180', description: '90 Min. tiefe Sitzung' },
-  { id: 'pack4', name: '4er-Paket', duration: 90, price: 640, priceLabel: 'CHF 640', description: '4 × 90 Min. · sparst CHF 80' }
+const DEFAULT_SESSION_TYPES = [
+  {
+    id: 'kennenlernen', name: 'Kennenlerngespräch',
+    duration: 30, price: 0, priceLabel: 'kostenlos', priceSubtext: '',
+    description: '30 Min. unverbindlich · online',
+    tagline: 'Ein unverbindliches 30-minütiges Gespräch, um zu spüren, ob wir auf einer Wellenlänge sind.',
+    features: ['30 Minuten online', 'Deine Fragen, mein Hinhören', 'Klarheit über den nächsten Schritt', 'Vollständig kostenfrei'],
+    ctaLabel: 'Gespräch buchen',
+    featured: false
+  },
+  {
+    id: 'single', name: 'Einzelsitzung',
+    duration: 90, price: 180, priceLabel: 'CHF 180', priceSubtext: '/ Sitzung',
+    description: '90 Min. tiefe Sitzung',
+    tagline: 'Eine tiefe Sitzung, in der wir gemeinsam dort hinhören, wo deine Seele Heilung sucht.',
+    features: ['90 Minuten Sitzung', 'Persönliches Vorgespräch', 'Energiearbeit & Begleitung', 'Nachgespräch zur Integration'],
+    ctaLabel: 'Termin auswählen',
+    featured: false
+  },
+  {
+    id: 'pack4', name: '4er-Paket',
+    duration: 90, price: 640, priceLabel: 'CHF 640', priceSubtext: 'statt 720',
+    description: '4 × 90 Min. · sparst CHF 80',
+    tagline: 'Ein vertiefender Prozess über vier Sitzungen – für nachhaltige Veränderung und tiefe Wandlung.',
+    features: ['4 × 90 Minuten Sitzungen', 'Alle 4 Termine direkt buchen', 'Begleitung zwischen den Sitzungen', 'Sparen gegenüber Einzelpreis'],
+    ctaLabel: '4 Termine buchen',
+    featured: true,
+    badge: 'Beliebt'
+  }
 ];
+
+function getSessionTypes() {
+  return Storage.get('sessionTypes', DEFAULT_SESSION_TYPES);
+}
+function setSessionTypes(list) {
+  Storage.set('sessionTypes', list);
+  if (Cloud.ready && Cloud.isAuth()) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:sessionTypes', content: JSON.stringify(list) }, 'text_key')
+      .catch(e => { console.error(e); showToast('Cloud-Sync fehlgeschlagen'); });
+  }
+  renderBookingTypes();
+  renderOfferCardsFromConfig();
+}
+
+const DEFAULT_OFFER_ICONS = {
+  kennenlernen: '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+  single: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>',
+  pack4: '<svg viewBox="0 0 24 24"><path d="M3 12c0-5 4-9 9-9s9 4 9 9-4 9-9 9-9-4-9-9z"/><path d="M8 12l3 3 5-6"/></svg>',
+  default: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>'
+};
+
+function renderOfferCardsFromConfig() {
+  const grid = document.getElementById('offersGrid');
+  if (!grid) return;
+  const types = getSessionTypes();
+  if (types.length === 0) {
+    grid.innerHTML = '<p style="text-align:center; color:var(--text-muted); grid-column:1/-1; padding:2rem;">Noch keine Angebote definiert.</p>';
+    return;
+  }
+
+  grid.innerHTML = types.map((t, i) => {
+    const icon = DEFAULT_OFFER_ICONS[t.id] || DEFAULT_OFFER_ICONS.default;
+    const featured = !!t.featured;
+    const features = (t.features || []).map(f => `<li class="offer-feature">${escapeHtml(f)}</li>`).join('');
+    const ctaLabel = t.ctaLabel || 'Termin buchen';
+    const cardClass = `offer-card reveal ${featured ? 'featured' : ''}`;
+    const btnClass = featured ? 'btn btn-ghost btn-block' : 'btn btn-secondary btn-block';
+
+    return `
+      <div class="${cardClass}">
+        ${featured ? `<div class="offer-badge">${escapeHtml(t.badge || 'Beliebt')}</div>` : ''}
+        <div class="offer-icon">${icon}</div>
+        <h3>${escapeHtml(t.name)}</h3>
+        <p class="offer-desc">${escapeHtml(t.tagline || t.description || '')}</p>
+        ${features ? `<ul class="offer-features">${features}</ul>` : ''}
+        <div class="offer-price">
+          <span class="offer-price-currency">${t.price > 0 ? 'CHF' : ''}</span>
+          <span>${t.price > 0 ? t.price : t.priceLabel}</span>
+          <span class="offer-price-unit">${escapeHtml(t.priceSubtext || '')}</span>
+        </div>
+        <button class="${btnClass}" onclick="goToBooking('${t.id}')">${escapeHtml(ctaLabel)}</button>
+      </div>
+    `;
+  }).join('');
+
+  // observeReveals erneut anwenden, damit neue Karten animiert werden
+  if (typeof observeReveals === 'function') observeReveals();
+}
+
+// Backward-compat
+const SESSION_TYPES = new Proxy([], {
+  get(_, prop) {
+    const list = getSessionTypes();
+    return list[prop];
+  }
+});
+
+/* ---------- Admin: Sitzungstypen verwalten ---------- */
+
+function renderAdminOffersList() {
+  const container = document.getElementById('adminOffersList');
+  if (!container) return;
+  const types = getSessionTypes();
+  if (types.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); padding:1rem; text-align:center;">Keine Angebote definiert. Klick unten auf „+ Neues Angebot".</p>';
+    return;
+  }
+
+  container.innerHTML = types.map((t, i) => `
+    <div class="admin-offer-item ${t.featured ? 'featured' : ''}" data-offer-id="${escapeHtml(t.id)}">
+      <div class="admin-offer-item-head">
+        <div>
+          <span class="admin-offer-item-title">${escapeHtml(t.name)}</span>
+          <span class="admin-offer-item-id">${escapeHtml(t.id)}</span>
+          ${t.featured ? '<span class="admin-offer-item-id" style="background:var(--primary-light); color:var(--primary-dark);">⭐ Hervorgehoben</span>' : ''}
+        </div>
+        <div class="admin-offer-item-actions">
+          ${i > 0 ? `<button class="btn-icon-sm" onclick="moveSessionType(${i}, -1)" title="Nach oben">↑</button>` : ''}
+          ${i < types.length - 1 ? `<button class="btn-icon-sm" onclick="moveSessionType(${i}, 1)" title="Nach unten">↓</button>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="toggleEditOffer('${escapeHtml(t.id)}')">Bearbeiten</button>
+          <button class="btn-icon-sm" onclick="deleteSessionType('${escapeHtml(t.id)}')" title="Löschen" style="color:#b85a4a;">×</button>
+        </div>
+      </div>
+      <div class="admin-offer-item-meta">
+        <span>⏱ ${t.duration} Min.</span>
+        <span>💰 ${escapeHtml(t.priceLabel)} ${t.priceSubtext ? '· ' + escapeHtml(t.priceSubtext) : ''}</span>
+        <span>📋 ${(t.features || []).length} Punkte</span>
+      </div>
+
+      <div class="admin-offer-edit" data-offer-edit="${escapeHtml(t.id)}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name *</label>
+            <input type="text" class="form-input" data-field="name" value="${escapeHtml(t.name)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ID (technisch)</label>
+            <input type="text" class="form-input" data-field="id" value="${escapeHtml(t.id)}" style="font-family:monospace;">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Dauer (Minuten)</label>
+            <input type="number" class="form-input" data-field="duration" value="${t.duration}" min="15" step="15">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preis (CHF, 0 = kostenlos)</label>
+            <input type="number" class="form-input" data-field="price" value="${t.price}" min="0" step="10">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Preis-Anzeige</label>
+            <input type="text" class="form-input" data-field="priceLabel" value="${escapeHtml(t.priceLabel)}" placeholder="CHF 180 oder kostenlos">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preis-Untertitel</label>
+            <input type="text" class="form-input" data-field="priceSubtext" value="${escapeHtml(t.priceSubtext || '')}" placeholder="/ Sitzung oder statt 720">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kurz-Beschreibung (im Buchungs-Tool)</label>
+          <input type="text" class="form-input" data-field="description" value="${escapeHtml(t.description)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tagline (auf der Angebots-Karte)</label>
+          <textarea class="form-textarea" data-field="tagline" rows="2">${escapeHtml(t.tagline || '')}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Features / Punkte (eine pro Zeile)</label>
+          <textarea class="form-textarea" data-field="features" rows="4">${escapeHtml((t.features || []).join('\n'))}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Button-Text</label>
+            <input type="text" class="form-input" data-field="ctaLabel" value="${escapeHtml(t.ctaLabel || 'Buchen')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hervorhebungs-Badge (optional)</label>
+            <input type="text" class="form-input" data-field="badge" value="${escapeHtml(t.badge || '')}" placeholder="z.B. Beliebt">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" data-field="featured" ${t.featured ? 'checked' : ''}>
+            <span>Als „hervorgehoben" markieren (mit Badge)</span>
+          </label>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-primary btn-sm" onclick="saveOfferEdits('${escapeHtml(t.id)}')">Speichern</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEditOffer('${escapeHtml(t.id)}')">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEditOffer(id) {
+  const el = document.querySelector(`[data-offer-edit="${CSS.escape(id)}"]`);
+  if (el) el.classList.toggle('active');
+}
+
+function moveSessionType(idx, delta) {
+  const list = getSessionTypes();
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= list.length) return;
+  [list[idx], list[newIdx]] = [list[newIdx], list[idx]];
+  setSessionTypes(list);
+  renderAdminOffersList();
+}
+
+function saveOfferEdits(originalId) {
+  const editEl = document.querySelector(`[data-offer-edit="${CSS.escape(originalId)}"]`);
+  if (!editEl) return;
+  const list = getSessionTypes();
+  const idx = list.findIndex(t => t.id === originalId);
+  if (idx === -1) return;
+
+  const get = field => editEl.querySelector(`[data-field="${field}"]`);
+
+  const newId = get('id').value.trim() || originalId;
+  // Check ID-Konflikt
+  if (newId !== originalId && list.some(t => t.id === newId)) {
+    showToast('Diese ID gibt es schon – bitte eine andere wählen.');
+    return;
+  }
+
+  const featuresText = get('features').value;
+  const features = featuresText.split('\n').map(s => s.trim()).filter(Boolean);
+
+  list[idx] = {
+    id: newId,
+    name: get('name').value.trim() || 'Unbenannt',
+    duration: parseInt(get('duration').value) || 90,
+    price: parseFloat(get('price').value) || 0,
+    priceLabel: get('priceLabel').value.trim() || 'kostenlos',
+    priceSubtext: get('priceSubtext').value.trim(),
+    description: get('description').value.trim(),
+    tagline: get('tagline').value.trim(),
+    features,
+    ctaLabel: get('ctaLabel').value.trim() || 'Buchen',
+    badge: get('badge').value.trim(),
+    featured: get('featured').checked
+  };
+
+  setSessionTypes(list);
+  renderAdminOffersList();
+  showToast('Angebot aktualisiert');
+}
+
+function addNewSessionType() {
+  const id = prompt('Eindeutige ID für das neue Angebot (z.B. "intensiv" oder "telefon"):');
+  if (!id) return;
+  const cleanId = id.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (!cleanId) { showToast('Ungültige ID'); return; }
+  const list = getSessionTypes();
+  if (list.some(t => t.id === cleanId)) {
+    showToast('Diese ID gibt es bereits');
+    return;
+  }
+  list.push({
+    id: cleanId,
+    name: 'Neues Angebot',
+    duration: 60,
+    price: 0,
+    priceLabel: 'CHF 0',
+    priceSubtext: '',
+    description: 'Beschreibung hier',
+    tagline: 'Tagline für die Karte',
+    features: ['Feature 1', 'Feature 2'],
+    ctaLabel: 'Buchen',
+    featured: false
+  });
+  setSessionTypes(list);
+  renderAdminOffersList();
+  showToast('Angebot hinzugefügt – jetzt anpassen');
+  setTimeout(() => toggleEditOffer(cleanId), 200);
+}
+
+function deleteSessionType(id) {
+  if (['kennenlernen', 'single', 'pack4'].includes(id)) {
+    if (!confirm(`„${id}" ist ein Standard-Angebot mit spezieller Logik. Wirklich löschen?`)) return;
+  } else {
+    if (!confirm('Dieses Angebot wirklich entfernen?')) return;
+  }
+  const list = getSessionTypes().filter(t => t.id !== id);
+  setSessionTypes(list);
+  renderAdminOffersList();
+  showToast('Angebot entfernt');
+}
+
+function resetSessionTypesToDefault() {
+  if (!confirm('Alle Angebote auf Standard zurücksetzen? Eigene Anpassungen gehen verloren.')) return;
+  setSessionTypes(JSON.parse(JSON.stringify(DEFAULT_SESSION_TYPES)));
+  renderAdminOffersList();
+  showToast('Auf Standard zurückgesetzt');
+}
 
 const DEFAULT_AVAILABILITY = {
   weeklySchedule: {
@@ -7187,7 +7835,7 @@ function parseDateKey(key) {
 }
 
 function getSessionType(id) {
-  return SESSION_TYPES.find(t => t.id === id);
+  return getSessionTypes().find(t => t.id === id);
 }
 
 function getSlotsForDate(dateKeyStr) {
@@ -7299,12 +7947,13 @@ function isDateInBookingWindow(date) {
 function renderBookingTypes() {
   const container = document.getElementById('bookingTypes');
   if (!container) return;
-  container.innerHTML = SESSION_TYPES.map(t => `
+  const types = getSessionTypes();
+  container.innerHTML = types.map(t => `
     <button class="booking-type-btn ${Booking.selectedType === t.id ? 'active' : ''}"
             data-type="${t.id}" onclick="selectSessionType('${t.id}')">
-      <span class="booking-type-name">${t.name}</span>
-      <span class="booking-type-meta">${t.description}</span>
-      <span class="booking-type-price">${t.priceLabel}</span>
+      <span class="booking-type-name">${escapeHtml(t.name)}</span>
+      <span class="booking-type-meta">${escapeHtml(t.description)}</span>
+      <span class="booking-type-price">${escapeHtml(t.priceLabel)}</span>
     </button>
   `).join('');
 }
@@ -8305,6 +8954,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFaqs();
   renderLinks();
   renderBookingTypes();
+  renderOfferCardsFromConfig();
   renderCalendar();
   renderSlots();
   applyCustomTexts();
@@ -8314,20 +8964,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Cloud initialisieren
   Cloud.init();
   if (Cloud.ready) {
-    // Auth-Session prüfen
     await Cloud.checkSession();
     updateEditFabVisibility();
 
-    // Public Content syncen, dann re-rendern
     await Cloud.syncDown();
     renderTestimonials();
     renderFaqs();
     renderLinks();
+    renderBookingTypes();
+    renderOfferCardsFromConfig();
     applyCustomTexts();
     renderCalendar();
     renderSlots();
 
-    // Belegte Slots aus Public-View holen (für Buchungs-Flow)
     Booking.takenSlotsCache = await Cloud.getTakenSlots();
     renderCalendar();
     renderSlots();
