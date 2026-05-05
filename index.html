@@ -133,6 +133,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   width: 32px; height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), var(--accent));
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,6 +143,12 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-style: normal;
   font-weight: 600;
   font-family: 'Outfit', sans-serif;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.brand-mark.has-logo {
+  background: var(--surface) center/cover no-repeat;
+  color: transparent;
 }
 .nav-links {
   display: flex;
@@ -553,12 +561,111 @@ section {
   color: var(--text-soft);
 }
 
+/* Process-Admin-Buttons (nur im Edit-Mode sichtbar) */
+.process-step-admin {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.6rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+body.edit-mode-active .process-step:hover .process-step-admin,
+body.edit-mode-active .process-step .process-step-admin { opacity: 1; }
+.process-admin-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  padding: 0;
+}
+.process-admin-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.process-admin-btn.delete:hover {
+  background: #b85a4a;
+  border-color: #b85a4a;
+}
+.process-step-add {
+  display: none;
+  cursor: pointer;
+  opacity: 0.6;
+  border: 1px dashed var(--border);
+  padding: 1rem;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items: flex-start; }
+.process-step-add:hover {
+  opacity: 1;
+  border-color: var(--primary);
+  background: rgba(110, 138, 156, 0.05);
+}
+.process-step-add h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  margin: 0 0 0.3rem;
+  color: var(--text);
+}
+
 /* OFFERS */
 .offers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 1.5rem;
   margin-top: 3rem;
+  /* Standard: bis zu 5 nebeneinander, automatisch umbrechend */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+/* Bei nur 1-3 Karten: nicht auseinanderziehen, sondern zentriert mit fester max-Breite */
+.offers-grid[data-count="1"] {
+  grid-template-columns: minmax(280px, 380px);
+  justify-content: center;
+}
+.offers-grid[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(280px, 380px));
+  justify-content: center;
+}
+.offers-grid[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(260px, 360px));
+  justify-content: center;
+}
+.offers-grid[data-count="4"] {
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+}
+.offers-grid[data-count="5"] {
+  grid-template-columns: repeat(5, minmax(200px, 1fr));
+}
+
+/* Bei vielen Karten (6+): zwei Reihen mit 3+3, 4+3 etc. */
+.offers-grid[data-count="6"],
+.offers-grid[data-count="7"],
+.offers-grid[data-count="8"],
+.offers-grid[data-count="9"],
+.offers-grid[data-count="10"] {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .offers-grid[data-count="5"] { grid-template-columns: repeat(3, 1fr); }
+  .offers-grid[data-count="4"] { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 800px) {
+  .offers-grid,
+  .offers-grid[data-count="2"],
+  .offers-grid[data-count="3"],
+  .offers-grid[data-count="4"],
+  .offers-grid[data-count="5"] {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
 }
 .offer-card {
   position: relative;
@@ -570,6 +677,19 @@ section {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+/* Bei 5 Karten weniger Padding für bessere Anpassung */
+.offers-grid[data-count="5"] .offer-card {
+  padding: 2rem 1.4rem;
+}
+.offers-grid[data-count="5"] .offer-card h3 {
+  font-size: 1.4rem;
+}
+.offers-grid[data-count="5"] .offer-card .offer-desc {
+  font-size: 0.85rem;
+}
+.offers-grid[data-count="4"] .offer-card {
+  padding: 2.2rem 1.6rem;
 }
 .offer-card::before {
   content: '';
@@ -697,12 +817,32 @@ section {
   line-height: 1;
   font-style: italic;
 }
-.testimonial-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+/* TESTIMONIAL CAROUSEL */
+.testimonial-carousel {
+  position: relative;
   margin-top: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
 }
+.testimonial-track-wrap {
+  flex: 1;
+  overflow: hidden;
+  border-radius: var(--radius);
+  min-width: 0;
+}
+.testimonial-track {
+  display: flex;
+  gap: 1.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow-x: auto;
+  padding: 0.5rem 0.3rem 1.5rem;
+  scrollbar-width: none;
+}
+.testimonial-track::-webkit-scrollbar { display: none; }
+
 .testimonial-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -710,11 +850,72 @@ section {
   padding: 2rem 1.8rem;
   position: relative;
   transition: all var(--transition);
+  flex: 0 0 calc((100% - 3rem) / 3); /* 3 sichtbare Karten Desktop */
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
 }
+@media (max-width: 900px) {
+  .testimonial-card { flex: 0 0 calc((100% - 1.5rem) / 2); } /* 2 Karten */
+}
+@media (max-width: 600px) {
+  .testimonial-card { flex: 0 0 100%; } /* 1 Karte */
+  .testimonial-carousel { gap: 0.4rem; }
+}
+
 .testimonial-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow);
 }
+
+.testimonial-arrow {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  z-index: 2;
+}
+.testimonial-arrow:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+.testimonial-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .testimonial-arrow { width: 36px; height: 36px; }
+}
+
+.testimonial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.testimonial-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.testimonial-dot.active {
+  background: var(--primary);
+  transform: scale(1.3);
+}
+
 .testimonial-stars {
   color: var(--accent);
   font-size: 0.9rem;
@@ -728,6 +929,7 @@ section {
   font-style: italic;
   color: var(--text);
   margin-bottom: 1.5rem;
+  flex: 1;
 }
 .testimonial-author {
   display: flex;
@@ -2986,9 +3188,10 @@ footer .brand {
   padding: 8rem 1.5rem 6rem;
   overflow: hidden;
   background-color: var(--text);
+  --hero-bg-url: url('https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1920&q=80');
   background-image:
     linear-gradient(180deg, rgba(15, 25, 38, 0.55) 0%, rgba(41, 56, 74, 0.5) 40%, rgba(41, 56, 74, 0.85) 100%),
-    url('https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1920&q=80');
+    var(--hero-bg-url);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -3367,9 +3570,10 @@ footer .brand {
   justify-content: center;
   padding: 7rem 1.5rem 6rem;
   overflow: hidden;
+  --business-bg-url: url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1920&q=80');
   background-image:
     linear-gradient(180deg, rgba(15, 25, 38, 0.55) 0%, rgba(41, 56, 74, 0.65) 50%, rgba(41, 56, 74, 0.85) 100%),
-    url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1920&q=80');
+    var(--business-bg-url);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -3778,6 +3982,21 @@ body.edit-mode-active [data-edit]:focus {
   box-shadow: 0 0 0 4px rgba(110, 138, 156, 0.15);
 }
 
+/* Spezial: Edit-Marker auf dunklen Hintergründen (Parallax-Quotes) sichtbarer */
+body.edit-mode-active .parallax-quote [data-edit] {
+  outline: 1px dashed rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+body.edit-mode-active .parallax-quote [data-edit]:hover {
+  outline: 2px dashed rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.14);
+}
+body.edit-mode-active .parallax-quote [data-edit]:focus {
+  outline: 2px solid white;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
 /* Edit-Marker Badge */
 body.edit-mode-active [data-edit]::before {
   content: '✎';
@@ -3962,6 +4181,26 @@ body.edit-mode-active [data-edit].edited::before {
   aspect-ratio: 16/9;
   border-radius: var(--radius-sm);
 }
+.image-manager-preview.logo-preview {
+  width: 100px;
+  height: 100px;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+}
+.image-manager-preview.logo-preview::before {
+  content: 'S';
+}
+.image-manager-preview.logo-preview.has-logo::before {
+  content: '';
+}
 .image-manager-info { min-width: 0; }
 .image-manager-info h5 {
   font-family: inherit;
@@ -4145,36 +4384,7 @@ body.edit-mode-active [data-edit].edited::before {
       <h2 data-edit="process-h2">Der Weg zu <em>deiner Sitzung</em></h2>
       <p data-edit="process-lead">In vier Schritten zu deinem Moment der Tiefe – einfach, klar und in deinem Tempo.</p>
     </div>
-    <div class="process-timeline">
-      <div class="process-step reveal">
-        <div class="process-step-num">1</div>
-        <div>
-          <h4 data-edit="process-step1-title">Termin wählen</h4>
-          <p data-edit="process-step1-text">Such dir online den Moment aus, der für dich stimmig ist – einzeln oder als 4er-Paket.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="process-step-num">2</div>
-        <div>
-          <h4 data-edit="process-step2-title">Vorgespräch</h4>
-          <p data-edit="process-step2-text">Vor jeder Sitzung nehmen wir uns Zeit, um zu spüren, was gerade in dir lebt.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="process-step-num">3</div>
-        <div>
-          <h4 data-edit="process-step3-title">Energiearbeit</h4>
-          <p data-edit="process-step3-text">In einem Raum aus Stille und Sicherheit darfst du loslassen und dich erinnern.</p>
-        </div>
-      </div>
-      <div class="process-step reveal">
-        <div class="process-step-num">4</div>
-        <div>
-          <h4 data-edit="process-step4-title">Integration</h4>
-          <p data-edit="process-step4-text">Nach der Sitzung begleite ich dich beim Ankommen und Integrieren des Erlebten.</p>
-        </div>
-      </div>
-    </div>
+    <div class="process-timeline" id="processTimeline"></div>
   </div>
 </section>
 
@@ -4203,7 +4413,18 @@ body.edit-mode-active [data-edit].edited::before {
       <h2 data-edit="testimonials-h2">Was Klient*innen <em>sagen</em></h2>
       <p data-edit="testimonials-lead">Echte Erfahrungen von Menschen, die ich auf ihrem Weg begleiten durfte.</p>
     </div>
-    <div class="testimonial-grid" id="testimonialGrid"></div>
+    <div class="testimonial-carousel" id="testimonialCarousel">
+      <button class="testimonial-arrow prev" id="testimonialPrev" aria-label="Zurück" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="testimonial-track-wrap">
+        <div class="testimonial-track" id="testimonialTrack"></div>
+      </div>
+      <button class="testimonial-arrow next" id="testimonialNext" aria-label="Weiter" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="testimonial-dots" id="testimonialDots"></div>
   </div>
 </section>
 
@@ -4395,7 +4616,7 @@ body.edit-mode-active [data-edit].edited::before {
           <span data-edit="business-cta-1">Meine Dienstleistungen</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
         </button>
-        <button class="btn btn-secondary" onclick="scrollToSection('business-contact')" data-edit="business-cta-2">Anfrage stellen</button>
+        <button class="btn btn-secondary" onclick="scrollToSection('contact')" data-edit="business-cta-2">Anfrage stellen</button>
       </div>
     </div>
   </div>
@@ -4989,6 +5210,38 @@ body.edit-mode-active [data-edit].edited::before {
       <div class="image-manager-grid">
 
         <div class="image-manager-row">
+          <div class="image-manager-preview logo-preview" data-preview="logo"></div>
+          <div class="image-manager-info">
+            <h5>Logo</h5>
+            <p>Erscheint in der Navigation oben links und im Footer. Quadratisches PNG/JPG mit transparentem Hintergrund am besten (z.B. 200×200 px).</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="logo" onchange="uploadImageOverride(event)" hidden>
+                Logo hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('logo')">Default „S" verwenden</button>
+            </div>
+            <div class="image-manager-status" data-status="logo"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview wide" data-preview="hero"></div>
+          <div class="image-manager-info">
+            <h5>Start-Hero-Bild</h5>
+            <p>Großes Hintergrundbild ganz oben auf der Startseite. Querformat, dunkles/atmosphärisches Bild empfohlen.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="hero" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('hero')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="hero"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
           <div class="image-manager-preview" data-preview="about-main"></div>
           <div class="image-manager-info">
             <h5>Über-mich-Bild</h5>
@@ -5049,6 +5302,22 @@ body.edit-mode-active [data-edit].edited::before {
               <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('quote3')">Zurücksetzen</button>
             </div>
             <div class="image-manager-status" data-status="quote3"></div>
+          </div>
+        </div>
+
+        <div class="image-manager-row">
+          <div class="image-manager-preview wide" data-preview="business"></div>
+          <div class="image-manager-info">
+            <h5>Business-Hero-Bild</h5>
+            <p>Großes Hintergrundbild der Business-Sektion. Querformat. Etwas „professioneller", weniger spirituell.</p>
+            <div class="image-manager-buttons">
+              <label class="btn btn-primary btn-sm">
+                <input type="file" accept="image/*" data-image-key="business" onchange="uploadImageOverride(event)" hidden>
+                Bild hochladen
+              </label>
+              <button class="btn btn-secondary btn-sm" onclick="resetImageOverride('business')">Zurücksetzen</button>
+            </div>
+            <div class="image-manager-status" data-status="business"></div>
           </div>
         </div>
 
@@ -5552,6 +5821,17 @@ const Cloud = {
         } catch(e) { console.error('sessionTypes-Config parse error', e); }
       }
 
+      // Process-Schritte aus Config-Key
+      const procKey = textsObj['config:processSteps'];
+      if (procKey) {
+        try {
+          const parsed = JSON.parse(procKey);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            Storage.set('processSteps', parsed);
+          }
+        } catch(e) { console.error('processSteps-Config parse error', e); }
+      }
+
       if (settings[0] && settings[0].availability) {
         Storage.set('availability', settings[0].availability);
       }
@@ -5872,10 +6152,15 @@ function setTestimonials(list) {
 }
 
 function renderTestimonials() {
-  const container = document.getElementById('testimonialGrid');
-  if (!container) return;
+  const track = document.getElementById('testimonialTrack');
+  if (!track) return;
   const list = getTestimonials();
-  container.innerHTML = list.map(t => `
+  if (list.length === 0) {
+    track.innerHTML = '<div style="padding:2rem; color:var(--text-muted); width:100%; text-align:center;">Noch keine Stimmen vorhanden.</div>';
+    document.getElementById('testimonialDots').innerHTML = '';
+    return;
+  }
+  track.innerHTML = list.map(t => `
     <div class="testimonial-card reveal visible">
       <div class="testimonial-stars">${'★'.repeat(t.stars || 5)}</div>
       <div class="testimonial-text">„${escapeHtml(t.text)}"</div>
@@ -5888,6 +6173,89 @@ function renderTestimonials() {
       </div>
     </div>
   `).join('');
+
+  initTestimonialCarousel();
+}
+
+/**
+ * Initialisiert das Karussell: Pfeile, Dots, Touch-Swipe.
+ * Wird nach jedem Render aufgerufen, da wir die Cards neu erstellen.
+ */
+function initTestimonialCarousel() {
+  const track = document.getElementById('testimonialTrack');
+  const prev = document.getElementById('testimonialPrev');
+  const next = document.getElementById('testimonialNext');
+  const dotsContainer = document.getElementById('testimonialDots');
+  if (!track || !prev || !next) return;
+
+  const cards = track.querySelectorAll('.testimonial-card');
+  if (cards.length === 0) return;
+
+  function getCardWidth() {
+    const card = cards[0];
+    if (!card) return 300;
+    const style = getComputedStyle(track);
+    const gap = parseFloat(style.gap) || 24;
+    return card.getBoundingClientRect().width + gap;
+  }
+
+  function getVisibleCount() {
+    const w = window.innerWidth;
+    if (w <= 600) return 1;
+    if (w <= 900) return 2;
+    return 3;
+  }
+
+  function updateDots() {
+    const visible = getVisibleCount();
+    const totalSteps = Math.max(1, cards.length - visible + 1);
+    const cw = getCardWidth();
+    const currentStep = cw > 0 ? Math.round(track.scrollLeft / cw) : 0;
+
+    // Dots nur anzeigen, wenn es mehr als sichtbare Cards gibt
+    if (cards.length <= visible) {
+      dotsContainer.innerHTML = '';
+      prev.style.display = 'none';
+      next.style.display = 'none';
+      return;
+    }
+    prev.style.display = '';
+    next.style.display = '';
+
+    let dotsHTML = '';
+    for (let i = 0; i < totalSteps; i++) {
+      dotsHTML += `<button class="testimonial-dot ${i === currentStep ? 'active' : ''}" data-dot="${i}" type="button" aria-label="Zu Stimme ${i+1}"></button>`;
+    }
+    dotsContainer.innerHTML = dotsHTML;
+    dotsContainer.querySelectorAll('.testimonial-dot').forEach(d => {
+      d.addEventListener('click', e => {
+        const idx = parseInt(e.target.dataset.dot);
+        track.scrollTo({ left: idx * cw, behavior: 'smooth' });
+      });
+    });
+
+    prev.disabled = track.scrollLeft <= 4;
+    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
+  }
+
+  prev.onclick = () => {
+    track.scrollBy({ left: -getCardWidth(), behavior: 'smooth' });
+  };
+  next.onclick = () => {
+    track.scrollBy({ left: getCardWidth(), behavior: 'smooth' });
+  };
+
+  let scrollTimeout;
+  track.onscroll = () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateDots, 80);
+  };
+  window.addEventListener('resize', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateDots, 150);
+  });
+
+  updateDots();
 }
 
 function renderAdminTestimonialList() {
@@ -6716,17 +7084,21 @@ function applyCustomTexts() {
 
 // Mapping: Bild-Key → CSS-Selector + CSS-Variable
 const IMAGE_TARGETS = {
+  'hero':       { selector: '.hero',              cssVar: '--hero-bg-url' },
   'about-main': { selector: '.about-image',       cssVar: '--about-image-url' },
   'quote1':     { selector: '.parallax-quote.q1', cssVar: '--quote-bg-url' },
   'quote2':     { selector: '.parallax-quote.q2', cssVar: '--quote-bg-url' },
-  'quote3':     { selector: '.parallax-quote.q3', cssVar: '--quote-bg-url' }
+  'quote3':     { selector: '.parallax-quote.q3', cssVar: '--quote-bg-url' },
+  'business':   { selector: '.business-hero',     cssVar: '--business-bg-url' }
 };
 
 const IMAGE_FALLBACKS = {
+  'hero':       'https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=1920&q=80',
   'about-main': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
   'quote1':     'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1920&q=80',
   'quote2':     'https://images.unsplash.com/photo-1500964757637-c85e8a162699?auto=format&fit=crop&w=1920&q=80',
-  'quote3':     'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80'
+  'quote3':     'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80',
+  'business':   'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1920&q=80'
 };
 
 function applyCustomImages() {
@@ -6748,14 +7120,36 @@ function applyCustomImages() {
     }
   });
 
+  // Logo: alle .brand-mark Elemente updaten
+  const logoUrl = custom['image:logo'];
+  document.querySelectorAll('.brand-mark').forEach(el => {
+    if (logoUrl) {
+      el.style.backgroundImage = `url("${logoUrl}")`;
+      el.classList.add('has-logo');
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('has-logo');
+    }
+  });
+  // Logo-Preview im Admin
+  const logoPreview = document.querySelector('[data-preview="logo"]');
+  if (logoPreview) {
+    if (logoUrl) {
+      logoPreview.style.backgroundImage = `url("${logoUrl}")`;
+      logoPreview.classList.add('has-logo');
+    } else {
+      logoPreview.style.backgroundImage = '';
+      logoPreview.classList.remove('has-logo');
+    }
+  }
+
   // Business-CTA-Mail-Button: Mail aus Email-Link übernehmen
   const emailBtn = document.getElementById('businessCtaEmailBtn');
   if (emailBtn) {
     const links = getLinks();
     const emailLink = links.find(l => l.id === 'email' && l.enabled);
     if (emailLink && emailLink.url) {
-      // url ist wie "mailto:hello@soulbynici.ch" → mit Subject erweitern
-      const baseUrl = emailLink.url.split('?')[0]; // entfernt evtl. existierenden Subject
+      const baseUrl = emailLink.url.split('?')[0];
       emailBtn.href = baseUrl + '?subject=' + encodeURIComponent('Anfrage Business-Dienstleistungen');
     }
   }
@@ -6894,6 +7288,9 @@ function activateEditMode() {
     el.addEventListener('paste', onEditPaste);
   });
 
+  // Process-Sektion neu rendern, damit Add/Delete-Buttons erscheinen
+  renderProcessSteps();
+
   showToast('Bearbeitungs-Modus aktiv. Klicke auf Texte zum Ändern.');
 }
 
@@ -6911,6 +7308,9 @@ function deactivateEditMode() {
     el.removeEventListener('keydown', onEditKeydown);
     el.removeEventListener('paste', onEditPaste);
   });
+
+  // Process-Sektion neu rendern, damit Add/Delete-Buttons verschwinden
+  renderProcessSteps();
 }
 
 function onEditFocus(e) {
@@ -6925,6 +7325,22 @@ function onEditBlur(e) {
 
   const newText = el.innerHTML.trim();
   if (newText === EditMode.originalText) return; // keine Änderung
+
+  // SPEZIAL: process-step-Edits gehen in processSteps-Array statt customTexts
+  const processMatch = key.match(/^process-step-(title|text)-(\d+)$/);
+  if (processMatch) {
+    const field = processMatch[1];   // "title" oder "text"
+    const idx = parseInt(processMatch[2]);
+    const steps = getProcessSteps();
+    if (steps[idx]) {
+      const cleanText = el.textContent.trim() || (field === 'title' ? 'Schritt' : '...');
+      steps[idx][field] = cleanText;
+      setProcessSteps(steps);
+      el.classList.add('just-saved');
+      setTimeout(() => el.classList.remove('just-saved'), 800);
+    }
+    return;
+  }
 
   // Leerer Text → auf Original zurücksetzen
   if (!newText || newText === '<br>') {
@@ -7516,6 +7932,95 @@ async function deleteCurrentClient() {
 /* ============================================
    BOOKING SYSTEM (eigenständig)
    ============================================ */
+const DEFAULT_PROCESS_STEPS = [
+  { title: 'Termin wählen', text: 'Such dir online den Moment aus, der für dich stimmig ist – einzeln oder als 4er-Paket.' },
+  { title: 'Vorgespräch',   text: 'Vor jeder Sitzung nehmen wir uns Zeit, um zu spüren, was gerade in dir lebt.' },
+  { title: 'Energiearbeit', text: 'In einem Raum aus Stille und Sicherheit darfst du loslassen und dich erinnern.' },
+  { title: 'Integration',   text: 'Nach der Sitzung begleite ich dich beim Ankommen und Integrieren des Erlebten.' }
+];
+
+function getProcessSteps() { return Storage.get('processSteps', DEFAULT_PROCESS_STEPS); }
+function setProcessSteps(list) {
+  Storage.set('processSteps', list);
+  if (Cloud.ready && Cloud.isAuth()) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:processSteps', content: JSON.stringify(list) }, 'text_key')
+      .catch(e => { console.error(e); showToast('Cloud-Sync fehlgeschlagen'); });
+  }
+  renderProcessSteps();
+}
+
+function renderProcessSteps() {
+  const container = document.getElementById('processTimeline');
+  if (!container) return;
+  const steps = getProcessSteps();
+  if (steps.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1; padding:2rem;">Keine Schritte definiert.</p>';
+    return;
+  }
+
+  const isEditing = (typeof EditMode !== 'undefined' && EditMode.active);
+
+  container.innerHTML = steps.map((s, i) => `
+    <div class="process-step reveal">
+      <div class="process-step-num">${i + 1}</div>
+      <div>
+        <h4 data-edit="process-step-title-${i}">${escapeHtml(s.title)}</h4>
+        <p data-edit="process-step-text-${i}">${escapeHtml(s.text)}</p>
+        ${isEditing ? `
+          <div class="process-step-admin">
+            ${i > 0 ? `<button class="process-admin-btn" onclick="moveProcessStep(${i}, -1)" title="Nach links">←</button>` : ''}
+            ${i < steps.length - 1 ? `<button class="process-admin-btn" onclick="moveProcessStep(${i}, 1)" title="Nach rechts">→</button>` : ''}
+            <button class="process-admin-btn delete" onclick="deleteProcessStep(${i})" title="Schritt löschen">×</button>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `).join('') + (isEditing ? `
+    <div class="process-step-add" onclick="addProcessStep()">
+      <div class="process-step-num">+</div>
+      <div>
+        <h4>Schritt hinzufügen</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted);">Klicke hier um einen neuen Schritt anzuhängen.</p>
+      </div>
+    </div>
+  ` : '');
+
+  // Edit-Mode-Listener neu binden, wenn aktiv
+  if (isEditing) {
+    container.querySelectorAll('[data-edit]').forEach(el => {
+      el.setAttribute('contenteditable', 'true');
+      el.addEventListener('focus', onEditFocus);
+      el.addEventListener('blur', onEditBlur);
+      el.addEventListener('keydown', onEditKeydown);
+      el.addEventListener('paste', onEditPaste);
+    });
+  }
+  if (typeof observeReveals === 'function') observeReveals();
+}
+
+function addProcessStep() {
+  const steps = getProcessSteps();
+  steps.push({ title: 'Neuer Schritt', text: 'Beschreibung hier ergänzen.' });
+  setProcessSteps(steps);
+  showToast('Schritt hinzugefügt – jetzt anpassen');
+}
+
+function moveProcessStep(idx, delta) {
+  const steps = getProcessSteps();
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= steps.length) return;
+  [steps[idx], steps[newIdx]] = [steps[newIdx], steps[idx]];
+  setProcessSteps(steps);
+}
+
+function deleteProcessStep(idx) {
+  if (!confirm('Diesen Schritt wirklich entfernen?')) return;
+  const steps = getProcessSteps();
+  steps.splice(idx, 1);
+  setProcessSteps(steps);
+  showToast('Schritt entfernt');
+}
+
 const DEFAULT_SESSION_TYPES = [
   {
     id: 'kennenlernen', name: 'Kennenlerngespräch',
@@ -7571,6 +8076,10 @@ function renderOfferCardsFromConfig() {
   const grid = document.getElementById('offersGrid');
   if (!grid) return;
   const types = getSessionTypes();
+
+  // Anzahl als Daten-Attribut für CSS-Logik
+  grid.setAttribute('data-count', types.length);
+
   if (types.length === 0) {
     grid.innerHTML = '<p style="text-align:center; color:var(--text-muted); grid-column:1/-1; padding:2rem;">Noch keine Angebote definiert.</p>';
     return;
@@ -8921,11 +9430,15 @@ document.addEventListener('keydown', (e) => {
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) {
-    const offset = 70;
-    window.scrollTo({ top: el.offsetTop - offset, behavior: 'smooth' });
+    const navHeight = document.querySelector('.nav')?.offsetHeight || 70;
+    const offset = navHeight + 24; // Nav + etwas Luft
+    const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: y, behavior: 'smooth' });
   }
-  document.getElementById('navLinks').classList.remove('active');
-  document.getElementById('navToggle').classList.remove('active');
+  const navLinks = document.getElementById('navLinks');
+  const navToggle = document.getElementById('navToggle');
+  if (navLinks) navLinks.classList.remove('active');
+  if (navToggle) navToggle.classList.remove('active');
 }
 
 document.getElementById('navToggle').addEventListener('click', () => {
@@ -8998,6 +9511,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderLinks();
   renderBookingTypes();
   renderOfferCardsFromConfig();
+  renderProcessSteps();
   renderCalendar();
   renderSlots();
   applyCustomTexts();
@@ -9016,6 +9530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderLinks();
     renderBookingTypes();
     renderOfferCardsFromConfig();
+    renderProcessSteps();
     applyCustomTexts();
     renderCalendar();
     renderSlots();
