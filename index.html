@@ -616,6 +616,137 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
   color: var(--text);
 }
 
+/* SHOP / MITGLIEDERBEREICH */
+.shop {
+  padding: 6rem 0;
+  background: var(--bg);
+}
+.shop-actions {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0 2.5rem;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+.shop-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition);
+}
+.shop-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+.shop-card.featured {
+  border-color: var(--primary);
+}
+.shop-card-cover {
+  aspect-ratio: 16/10;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.shop-card-badge {
+  position: absolute;
+  top: 1rem; left: 1rem;
+  background: var(--accent);
+  color: white;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 100px;
+  font-weight: 500;
+}
+.shop-card-category {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 100px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+.shop-card-body {
+  padding: 1.6rem 1.6rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.shop-card-body h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  margin: 0 0 0.4rem;
+  color: var(--text);
+  line-height: 1.2;
+}
+.shop-card-tagline {
+  font-size: 0.92rem;
+  color: var(--text-soft);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+.shop-card-features {
+  list-style: none;
+  margin: 0.5rem 0 1.2rem;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+.shop-card-features li {
+  padding: 0.25rem 0 0.25rem 1.2rem;
+  position: relative;
+}
+.shop-card-features li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+.shop-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  gap: 1rem;
+}
+.shop-card-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+.shop-card-price small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-weight: 400;
+  display: block;
+  margin-top: -0.2rem;
+}
+.shop-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+
 /* OFFERS */
 .offers-grid {
   display: grid;
@@ -4095,6 +4226,25 @@ body.edit-mode-active [data-edit].edited::before {
   padding: 1.2rem 1.4rem;
   margin-bottom: 0.8rem;
 }
+.admin-product-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 0.8rem;
+}
+.admin-product-item.featured {
+  border-color: var(--primary);
+  background: var(--surface);
+}
+.admin-product-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
 .admin-offer-item.featured {
   border-color: var(--primary);
   background: var(--surface);
@@ -4284,6 +4434,7 @@ body.edit-mode-active [data-edit].edited::before {
       <li><a onclick="scrollToSection('process')">Ablauf</a></li>
       <li><a onclick="scrollToSection('offers')">Angebote</a></li>
       <li><a onclick="scrollToSection('booking')">Buchung</a></li>
+      <li><a onclick="scrollToSection('shop')">Inhalte</a></li>
       <li><a onclick="scrollToSection('faq')">FAQ</a></li>
       <li><a onclick="scrollToSection('business')">Business</a></li>
       <li><a onclick="scrollToSection('contact')">Kontakt</a></li>
@@ -4745,6 +4896,26 @@ body.edit-mode-active [data-edit].edited::before {
   </div>
 </section>
 
+<!-- SHOP / MITGLIEDERBEREICH -->
+<section id="shop" class="shop">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-eyebrow" data-edit="shop-eyebrow">Vertieftes Erleben</span>
+      <h2 data-edit="shop-h2">Inhalte für <em>deinen Weg</em></h2>
+      <p data-edit="shop-lead">Videoserien, E-Books und Live-Sessions – für Momente zwischen unseren Begegnungen, in denen du dich selbst weiter erinnern darfst.</p>
+    </div>
+
+    <div class="shop-actions reveal" id="shopMemberArea">
+      <button class="btn btn-ghost" onclick="openMemberArea()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span data-edit="shop-member-cta">Mein Mitgliederbereich</span>
+      </button>
+    </div>
+
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+</section>
+
 <section id="newsletter-section" class="newsletter">
   <div class="newsletter-inner">
     <span class="section-eyebrow" data-edit="newsletter-eyebrow">Sanfte Impulse</span>
@@ -4948,6 +5119,7 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="clients" onclick="switchAdminTab(event,'clients')">Klient*innen</button>
       <button class="admin-tab" data-panel="schedule" onclick="switchAdminTab(event,'schedule')">Verfügbarkeit</button>
       <button class="admin-tab" data-panel="offers" onclick="switchAdminTab(event,'offers')">Angebote</button>
+      <button class="admin-tab" data-panel="shop" onclick="switchAdminTab(event,'shop')">Shop</button>
       <button class="admin-tab" data-panel="texts" onclick="switchAdminTab(event,'texts')">Texte</button>
       <button class="admin-tab" data-panel="images" onclick="switchAdminTab(event,'images')">Bilder</button>
       <button class="admin-tab" data-panel="links" onclick="switchAdminTab(event,'links')">Links</button>
@@ -5172,6 +5344,32 @@ body.edit-mode-active [data-edit].edited::before {
       <p style="font-size:0.8rem; color:var(--text-muted); margin-top:1.2rem; line-height:1.5;">
         <strong>Hinweis:</strong> Die IDs „kennenlernen", „single", „pack4" sollten nicht geändert werden, da sie spezielle Logik triggern (z.B. atomare 4er-Paket-Buchung). Du kannst beliebige weitere Angebote hinzufügen.
       </p>
+    </div>
+
+    <!-- SHOP / PRODUKTE -->
+    <div class="admin-panel" id="panel-shop">
+      <h4 class="admin-section-label">Shop &amp; Mitgliederbereich</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1.5rem; line-height:1.6;">
+        Verwalte hier deine digitalen Produkte: Videoserien, E-Books, Live-Sessions, Mitgliedschaften. Die Inhalte erscheinen in der „Inhalte"-Sektion auf der Webseite.
+      </p>
+
+      <div id="adminProductsList"></div>
+
+      <div class="admin-actions" style="margin-top:1.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="addNewProduct()">+ Neues Produkt</button>
+        <button class="btn btn-secondary btn-sm" onclick="syncProductsFromCloud()">Aus Cloud aktualisieren</button>
+      </div>
+
+      <div style="background: var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1.2rem; margin-top:2rem; font-size:0.85rem; line-height:1.6; color:var(--text-soft);">
+        <strong>Phase 1 — Produkte verwalten</strong><br>
+        Du kannst Produkte anlegen, beschreiben und Cover-Bilder hochladen. Die Produkte erscheinen sofort auf der Webseite.
+        <br><br>
+        <strong>Phase 2 — Zahlungen via Stripe</strong> (folgt)<br>
+        Sobald du einen Stripe-Account hast, verknüpfen wir die Produkte mit Stripe-Preisen. Dann können Klient*innen direkt kaufen (Karte, Twint).
+        <br><br>
+        <strong>Phase 3 — Mitgliederbereich mit Login</strong> (folgt)<br>
+        Klient*innen können sich einloggen und ihre gekauften Inhalte abrufen.
+      </div>
     </div>
 
     <!-- TEXTS -->
@@ -6754,6 +6952,7 @@ function switchAdminTab(e, panel) {
   if (target === 'bookings') renderAdminBookings();
   if (target === 'schedule') renderScheduleEditor();
   if (target === 'links') renderAdminLinks();
+  if (target === 'shop') renderAdminProductsList();
   if (target === 'texts') {
     renderTextOverridesList();
     const countEl = document.getElementById('textOverridesCount');
@@ -8082,6 +8281,450 @@ function setSessionTypes(list) {
   }
   renderBookingTypes();
   renderOfferCardsFromConfig();
+}
+
+/* ============================================
+   SHOP / PRODUKTE
+   ============================================ */
+function getProducts() { return Storage.get('products', []); }
+function setProducts(list) { Storage.set('products', list); }
+
+async function syncProductsFromCloud() {
+  if (!Cloud.ready) return;
+  try {
+    const rows = await Cloud.list('products', { orderBy: 'sort_order' });
+    const list = rows.map(p => ({
+      id: p.id,
+      slug: p.slug,
+      type: p.type,
+      category: p.category,
+      name: p.name,
+      tagline: p.tagline || '',
+      description: p.description || '',
+      features: p.features || [],
+      coverImage: p.cover_image || '',
+      price: parseFloat(p.price),
+      priceLabel: p.price_label || '',
+      currency: p.currency || 'CHF',
+      interval: p.interval,
+      trialDays: p.trial_days || 0,
+      youtubeUrl: p.youtube_url || '',
+      downloadUrl: p.download_url || '',
+      liveDate: p.live_date,
+      stripePriceId: p.stripe_price_id,
+      stripeProductId: p.stripe_product_id,
+      active: p.active,
+      featured: p.featured,
+      badge: p.badge || '',
+      sortOrder: p.sort_order || 0
+    }));
+    setProducts(list);
+    renderShopProducts();
+  } catch (err) {
+    console.error('[syncProductsFromCloud]', err);
+  }
+}
+
+const SHOP_CATEGORY_LABELS = {
+  video: 'Video',
+  ebook: 'E-Book',
+  audio: 'Audio',
+  live: 'Live',
+  bundle: 'Paket'
+};
+
+function renderShopProducts() {
+  const grid = document.getElementById('shopGrid');
+  if (!grid) return;
+  // Nur aktive Produkte für Public anzeigen
+  const products = getProducts().filter(p => p.active !== false);
+
+  if (products.length === 0) {
+    grid.innerHTML = '<div class="shop-empty">Hier entstehen bald wundervolle Inhalte. Schau bald wieder vorbei.</div>';
+    return;
+  }
+
+  grid.innerHTML = products.map(p => {
+    const coverStyle = p.coverImage
+      ? `background-image: url("${escapeHtml(p.coverImage)}");`
+      : '';
+    const features = (p.features || []).slice(0, 4)
+      .map(f => `<li>${escapeHtml(f)}</li>`).join('');
+    const catLabel = SHOP_CATEGORY_LABELS[p.category] || p.category || '';
+    const isSubscription = p.type === 'subscription';
+    const priceLine = p.priceLabel || (p.price > 0 ? `CHF ${p.price.toFixed(0)}` : 'kostenlos');
+    const priceSub = isSubscription ? 'monatlich kündbar' : (p.type === 'one_time' ? 'einmalig' : '');
+
+    return `
+      <div class="shop-card ${p.featured ? 'featured' : ''}" data-product-slug="${escapeHtml(p.slug)}">
+        <div class="shop-card-cover" style="${coverStyle}">
+          ${p.badge ? `<div class="shop-card-badge">${escapeHtml(p.badge)}</div>` : ''}
+          ${catLabel ? `<div class="shop-card-category">${escapeHtml(catLabel)}</div>` : ''}
+        </div>
+        <div class="shop-card-body">
+          <h3>${escapeHtml(p.name)}</h3>
+          ${p.tagline ? `<div class="shop-card-tagline">${escapeHtml(p.tagline)}</div>` : ''}
+          ${features ? `<ul class="shop-card-features">${features}</ul>` : ''}
+          <div class="shop-card-foot">
+            <div class="shop-card-price">
+              ${escapeHtml(priceLine)}
+              ${priceSub ? `<small>${escapeHtml(priceSub)}</small>` : ''}
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openProductDetail('${escapeHtml(p.slug)}')">
+              ${isSubscription ? 'Mitglied werden' : 'Mehr erfahren'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (typeof observeReveals === 'function') observeReveals();
+}
+
+function openProductDetail(slug) {
+  const product = getProducts().find(p => p.slug === slug);
+  if (!product) return;
+  // Phase 1: Einfacher Alert mit Hinweis. Phase 2 wird's ein Modal mit Stripe-Checkout.
+  showToast('Produkt-Detail & Kauf folgt — Stripe-Integration in Phase 2');
+  console.log('[openProductDetail]', product);
+}
+
+function openMemberArea() {
+  // Phase 3 wird das umgebaut zu echtem Login-Flow
+  showToast('Mitgliederbereich folgt — Login-System in Phase 3');
+}
+
+/* ============================================
+   ADMIN: SHOP-PRODUKTE VERWALTEN
+   ============================================ */
+function renderAdminProductsList() {
+  const container = document.getElementById('adminProductsList');
+  if (!container) return;
+  const products = getProducts();
+
+  if (products.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); padding:1rem; text-align:center;">Noch keine Produkte. Klicke unten auf „+ Neues Produkt".</p>';
+    return;
+  }
+
+  container.innerHTML = products.map((p, i) => `
+    <div class="admin-product-item ${p.featured ? 'featured' : ''}" data-product-id="${escapeHtml(p.id || p.slug)}">
+      <div class="admin-product-head">
+        <div>
+          <strong style="font-family:'Cormorant Garamond',serif; font-size:1.1rem;">${escapeHtml(p.name)}</strong>
+          <span class="admin-offer-item-id">${escapeHtml(p.slug)}</span>
+          <span class="admin-offer-item-id">${escapeHtml(SHOP_CATEGORY_LABELS[p.category] || p.category || '—')}</span>
+          ${!p.active ? '<span class="admin-offer-item-id" style="background:#fde2e0; color:#b85a4a;">Inaktiv</span>' : ''}
+          ${p.featured ? '<span class="admin-offer-item-id" style="background:var(--primary-light); color:var(--primary-dark);">⭐ Hervorgehoben</span>' : ''}
+        </div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          ${i > 0 ? `<button class="btn-icon-sm" onclick="moveProduct(${i}, -1)" title="Hoch">↑</button>` : ''}
+          ${i < products.length - 1 ? `<button class="btn-icon-sm" onclick="moveProduct(${i}, 1)" title="Runter">↓</button>` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="toggleEditProduct('${escapeHtml(p.slug)}')">Bearbeiten</button>
+          <button class="btn-icon-sm" onclick="deleteProduct('${escapeHtml(p.slug)}')" title="Löschen" style="color:#b85a4a;">×</button>
+        </div>
+      </div>
+      <div class="admin-offer-item-meta">
+        <span>${escapeHtml(p.tagline || '')}</span>
+      </div>
+      <div class="admin-offer-item-meta">
+        <span>💰 ${escapeHtml(p.priceLabel || ('CHF ' + (p.price || 0).toFixed(0)))}</span>
+        <span>📦 ${p.type === 'subscription' ? 'Abonnement' : 'Einmalkauf'}</span>
+        <span>📋 ${(p.features || []).length} Features</span>
+      </div>
+
+      <div class="admin-offer-edit" data-product-edit="${escapeHtml(p.slug)}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name *</label>
+            <input type="text" class="form-input" data-pf="name" value="${escapeHtml(p.name)}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL-Slug (technisch)</label>
+            <input type="text" class="form-input" data-pf="slug" value="${escapeHtml(p.slug)}" style="font-family:monospace;">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Typ</label>
+            <select class="form-input" data-pf="type">
+              <option value="one_time" ${p.type === 'one_time' ? 'selected' : ''}>Einmalkauf</option>
+              <option value="subscription" ${p.type === 'subscription' ? 'selected' : ''}>Abonnement</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategorie</label>
+            <select class="form-input" data-pf="category">
+              <option value="video"  ${p.category === 'video' ? 'selected' : ''}>Video / Kurs</option>
+              <option value="ebook"  ${p.category === 'ebook' ? 'selected' : ''}>E-Book / PDF</option>
+              <option value="audio"  ${p.category === 'audio' ? 'selected' : ''}>Audio</option>
+              <option value="live"   ${p.category === 'live' ? 'selected' : ''}>Live-Session</option>
+              <option value="bundle" ${p.category === 'bundle' ? 'selected' : ''}>Paket / Bundle</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Preis (CHF)</label>
+            <input type="number" class="form-input" data-pf="price" value="${p.price || 0}" min="0" step="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preis-Anzeige</label>
+            <input type="text" class="form-input" data-pf="priceLabel" value="${escapeHtml(p.priceLabel || '')}" placeholder="CHF 79 oder CHF 19/Monat">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tagline (kurz, ein Satz)</label>
+          <input type="text" class="form-input" data-pf="tagline" value="${escapeHtml(p.tagline || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Beschreibung</label>
+          <textarea class="form-textarea" data-pf="description" rows="3">${escapeHtml(p.description || '')}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Features (eine pro Zeile)</label>
+          <textarea class="form-textarea" data-pf="features" rows="4">${escapeHtml((p.features || []).join('\n'))}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">YouTube-URL (für Video-Produkte)</label>
+            <input type="url" class="form-input" data-pf="youtubeUrl" value="${escapeHtml(p.youtubeUrl || '')}" placeholder="https://youtube.com/playlist?list=...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Download-URL (für PDFs)</label>
+            <input type="url" class="form-input" data-pf="downloadUrl" value="${escapeHtml(p.downloadUrl || '')}" placeholder="https://...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cover-Bild (URL oder Upload)</label>
+          <input type="url" class="form-input" data-pf="coverImage" value="${escapeHtml(p.coverImage || '')}" placeholder="https://...">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer; margin-top:0.4rem; display:inline-block;">
+            <input type="file" accept="image/*" data-product-cover-upload="${escapeHtml(p.slug)}" hidden onchange="uploadProductCover(event)">
+            Bild hochladen statt URL
+          </label>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hervorhebungs-Badge</label>
+            <input type="text" class="form-input" data-pf="badge" value="${escapeHtml(p.badge || '')}" placeholder="z.B. Beliebt, Neu">
+          </div>
+          <div class="form-group">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-top:1.7rem;">
+              <input type="checkbox" data-pf="featured" ${p.featured ? 'checked' : ''}>
+              <span>Hervorgehoben</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-top:0.4rem;">
+              <input type="checkbox" data-pf="active" ${p.active !== false ? 'checked' : ''}>
+              <span>Aktiv (sichtbar auf Webseite)</span>
+            </label>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-primary btn-sm" onclick="saveProductEdits('${escapeHtml(p.slug)}')">Speichern</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEditProduct('${escapeHtml(p.slug)}')">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleEditProduct(slug) {
+  const el = document.querySelector(`[data-product-edit="${CSS.escape(slug)}"]`);
+  if (el) el.classList.toggle('active');
+}
+
+async function moveProduct(idx, delta) {
+  const list = getProducts();
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= list.length) return;
+  [list[idx], list[newIdx]] = [list[newIdx], list[idx]];
+  // sort_order in der DB updaten
+  setProducts(list);
+  if (Cloud.ready && Cloud.isAuth()) {
+    await Promise.all(list.map((p, i) =>
+      Cloud.updateOne('products', 'id', p.id, { sort_order: i })
+    ));
+  }
+  renderAdminProductsList();
+  renderShopProducts();
+}
+
+async function saveProductEdits(originalSlug) {
+  const editEl = document.querySelector(`[data-product-edit="${CSS.escape(originalSlug)}"]`);
+  if (!editEl) return;
+  const list = getProducts();
+  const idx = list.findIndex(p => p.slug === originalSlug);
+  if (idx === -1) return;
+
+  const get = field => editEl.querySelector(`[data-pf="${field}"]`);
+  const featuresText = get('features').value;
+  const features = featuresText.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const newSlug = (get('slug').value || originalSlug).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  if (newSlug !== originalSlug && list.some(p => p.slug === newSlug)) {
+    showToast('Dieser Slug existiert bereits.');
+    return;
+  }
+
+  const updated = {
+    ...list[idx],
+    slug: newSlug,
+    name: get('name').value.trim() || 'Unbenannt',
+    type: get('type').value,
+    category: get('category').value,
+    price: parseFloat(get('price').value) || 0,
+    priceLabel: get('priceLabel').value.trim(),
+    tagline: get('tagline').value.trim(),
+    description: get('description').value.trim(),
+    features,
+    youtubeUrl: get('youtubeUrl').value.trim(),
+    downloadUrl: get('downloadUrl').value.trim(),
+    coverImage: get('coverImage').value.trim(),
+    badge: get('badge').value.trim(),
+    featured: get('featured').checked,
+    active: get('active').checked
+  };
+  list[idx] = updated;
+  setProducts(list);
+
+  // Cloud-Sync
+  if (Cloud.ready && Cloud.isAuth()) {
+    try {
+      const dbRow = {
+        slug: updated.slug,
+        type: updated.type,
+        category: updated.category,
+        name: updated.name,
+        tagline: updated.tagline,
+        description: updated.description,
+        features,
+        cover_image: updated.coverImage,
+        price: updated.price,
+        price_label: updated.priceLabel,
+        currency: 'CHF',
+        interval: updated.type === 'subscription' ? 'month' : null,
+        youtube_url: updated.youtubeUrl,
+        download_url: updated.downloadUrl,
+        active: updated.active,
+        featured: updated.featured,
+        badge: updated.badge,
+        sort_order: idx
+      };
+      if (updated.id) {
+        await Cloud.updateOne('products', 'id', updated.id, dbRow);
+      } else {
+        const created = await Cloud.insertOne('products', dbRow);
+        list[idx].id = created.id;
+        setProducts(list);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Cloud-Sync fehlgeschlagen: ' + (err.message || ''));
+      return;
+    }
+  }
+
+  renderAdminProductsList();
+  renderShopProducts();
+  showToast('Produkt aktualisiert');
+}
+
+async function addNewProduct() {
+  const name = prompt('Name des neuen Produkts:');
+  if (!name) return;
+  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const list = getProducts();
+  if (list.some(p => p.slug === slug)) {
+    showToast('Ein Produkt mit ähnlichem Namen existiert bereits.');
+    return;
+  }
+
+  const newProduct = {
+    slug,
+    type: 'one_time',
+    category: 'video',
+    name: name.trim(),
+    tagline: '',
+    description: '',
+    features: [],
+    coverImage: '',
+    price: 0,
+    priceLabel: 'CHF 0',
+    currency: 'CHF',
+    active: true,
+    featured: false,
+    badge: '',
+    sortOrder: list.length
+  };
+
+  // Direkt in Cloud anlegen
+  if (Cloud.ready && Cloud.isAuth()) {
+    try {
+      const created = await Cloud.insertOne('products', {
+        slug, type: 'one_time', category: 'video', name: name.trim(),
+        price: 0, price_label: 'CHF 0', currency: 'CHF',
+        active: true, featured: false, sort_order: list.length
+      });
+      newProduct.id = created.id;
+    } catch (err) {
+      console.error(err);
+      showToast('Anlegen fehlgeschlagen: ' + (err.message || ''));
+      return;
+    }
+  }
+
+  list.push(newProduct);
+  setProducts(list);
+  renderAdminProductsList();
+  renderShopProducts();
+  showToast('Produkt hinzugefügt — jetzt anpassen');
+  setTimeout(() => toggleEditProduct(slug), 200);
+}
+
+async function deleteProduct(slug) {
+  const list = getProducts();
+  const product = list.find(p => p.slug === slug);
+  if (!product) return;
+  if (!confirm(`Produkt „${product.name}" wirklich löschen?`)) return;
+
+  if (Cloud.ready && Cloud.isAuth() && product.id) {
+    try {
+      await Cloud.deleteOne('products', 'id', product.id);
+    } catch (err) {
+      console.error(err);
+      showToast('Löschen in Cloud fehlgeschlagen');
+      return;
+    }
+  }
+
+  setProducts(list.filter(p => p.slug !== slug));
+  renderAdminProductsList();
+  renderShopProducts();
+  showToast('Produkt entfernt');
+}
+
+async function uploadProductCover(event) {
+  const input = event.target;
+  const slug = input.getAttribute('data-product-cover-upload');
+  const file = input.files[0];
+  if (!file || !slug) return;
+
+  try {
+    const dataUrl = await compressImage(file, 1200, 0.8);
+    // Den URL-Input im Edit-Block setzen
+    const editEl = document.querySelector(`[data-product-edit="${CSS.escape(slug)}"]`);
+    if (editEl) {
+      const urlInput = editEl.querySelector('[data-pf="coverImage"]');
+      if (urlInput) urlInput.value = dataUrl;
+    }
+    showToast('Bild hochgeladen — jetzt „Speichern" klicken');
+  } catch (err) {
+    console.error(err);
+    showToast('Upload fehlgeschlagen');
+  } finally {
+    input.value = '';
+  }
 }
 
 const DEFAULT_OFFER_ICONS = {
@@ -9531,6 +10174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderBookingTypes();
   renderOfferCardsFromConfig();
   renderProcessSteps();
+  renderShopProducts();
   renderCalendar();
   renderSlots();
   applyCustomTexts();
@@ -9553,6 +10197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyCustomTexts();
     renderCalendar();
     renderSlots();
+
+    // Shop-Produkte aus Cloud laden
+    await syncProductsFromCloud();
 
     Booking.takenSlotsCache = await Cloud.getTakenSlots();
     renderCalendar();
