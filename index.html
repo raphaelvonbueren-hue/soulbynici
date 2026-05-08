@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<meta name="description" content="Soul by Nici – Energiearbeit & Verbindung zu deinem wahren Selbst. Buche jetzt deine Sitzung mit Nicole Zauta in der Schweiz. Einzelsitzungen & 4er-Pakete.">
-<meta name="keywords" content="Energiearbeit, Heilung, Selbstverbindung, Coaching, Schweiz, Nicole Zauta, Soul by Nici">
+<meta name="description" content="soulbynici – Energiearbeit & Verbindung zu deinem wahren Selbst. Buche jetzt deine Sitzung mit Nicole Zauta in der Schweiz. Einzelsitzungen & 4er-Pakete.">
+<meta name="keywords" content="Energiearbeit, Heilung, Selbstverbindung, Coaching, Schweiz, Nicole Zauta, soulbynici">
 <meta name="theme-color" content="#6e8a9c">
 
 <!-- ===========================================
@@ -25,11 +25,11 @@
   }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<meta property="og:title" content="Soul by Nici · Energiearbeit & Selbstverbindung">
+<meta property="og:title" content="soulbynici · Energiearbeit · Heilung · Selbstverbindung">
 <meta property="og:description" content="Finde zurück zu deinem wahren Selbst – Energiearbeit & Begleitung in der Schweiz.">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="de_CH">
-<title>Soul by Nici · Energiearbeit & Selbstverbindung</title>
+<title>soulbynici · Energiearbeit · Heilung · Selbstverbindung</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,6 +128,16 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+}
+.brand-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+@media (max-width: 600px) {
+  .brand { font-size: 1.25rem; }
+  .brand-mark { width: 28px; height: 28px; font-size: 0.85rem; }
 }
 .brand-mark {
   width: 32px; height: 32px;
@@ -354,6 +364,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--text-muted);
   flex-wrap: wrap;
 }
+.hero-trust-centered {
+  justify-content: center;
+}
 .hero-trust-item {
   display: inline-flex;
   align-items: center;
@@ -498,6 +511,23 @@ section {
   text-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 .about-content h2 { margin-bottom: 1.5rem; }
+.about-content .about-h2-block {
+  margin-bottom: 0.4rem;
+}
+.about-subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 600px) {
+  .about-subtitle { font-size: 0.78rem; letter-spacing: 1px; white-space: normal; }
+}
 .about-content p { margin-bottom: 1.2rem; line-height: 1.8; }
 .about-signature {
   margin-top: 2rem;
@@ -628,9 +658,41 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
 }
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
   margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.shop-grid[data-count="1"] {
+  grid-template-columns: minmax(280px, 380px);
+  justify-content: center;
+}
+.shop-grid[data-count="2"] {
+  grid-template-columns: repeat(2, minmax(260px, 360px));
+  justify-content: center;
+}
+.shop-grid[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(240px, 340px));
+  justify-content: center;
+}
+.shop-grid[data-count="4"],
+.shop-grid[data-count="5"] {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+@media (max-width: 1100px) {
+  .shop-grid[data-count="3"] { grid-template-columns: repeat(2, 1fr); }
+  .shop-grid[data-count="4"],
+  .shop-grid[data-count="5"] { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .shop-grid,
+  .shop-grid[data-count="2"],
+  .shop-grid[data-count="3"],
+  .shop-grid[data-count="4"],
+  .shop-grid[data-count="5"] {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    gap: 1.2rem;
+  }
 }
 .shop-card {
   position: relative;
@@ -908,7 +970,7 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
 .offer-card.featured .offer-feature::before { color: var(--secondary); }
 .offer-price {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 2.6rem;
+  font-size: 2.4rem;
   font-weight: 400;
   color: var(--text);
   margin-top: auto;
@@ -919,16 +981,22 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
   position: relative; z-index: 1;
 }
 .offer-price-currency {
-  font-size: 0.95rem;
+  font-size: 2.4rem;
   font-weight: 400;
-  color: var(--text-muted);
-  font-family: 'Outfit', sans-serif;
-  letter-spacing: 0.05em;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 0.02em;
 }
 .offer-price-unit {
   font-size: 0.85rem;
   color: var(--text-muted);
   font-family: 'Outfit', sans-serif;
+}
+/* "kostenlos" als geschriebenes Wort, schöner Schnitt */
+.offer-price-free {
+  font-style: italic;
+  font-size: 2.2rem;
+  color: var(--accent);
 }
 
 /* TESTIMONIALS */
@@ -2672,6 +2740,98 @@ footer .brand {
   text-overflow: ellipsis;
 }
 
+/* MAINTENANCE OVERLAY */
+.maintenance-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(110, 138, 156, 0.12), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(176, 137, 104, 0.10), transparent 50%);
+  z-index: 99999;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+.maintenance-overlay[style*="display:none"],
+.maintenance-overlay[style*="display: none"] { display: none !important; }
+.maintenance-inner {
+  max-width: 560px;
+  text-align: center;
+  color: var(--text);
+}
+.maintenance-symbol {
+  margin-bottom: 2rem;
+  color: var(--primary);
+  animation: maintenance-float 6s ease-in-out infinite;
+}
+@keyframes maintenance-float {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50%      { transform: translateY(-8px); opacity: 1; }
+}
+.maintenance-inner h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--primary);
+  margin: 0 0 1.5rem;
+  line-height: 1.15;
+}
+.maintenance-inner p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--text-soft);
+  margin: 0 0 1rem;
+}
+.maintenance-contact {
+  margin-top: 2rem !important;
+  font-size: 0.95rem !important;
+}
+.maintenance-contact a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.maintenance-brand {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+.maintenance-admin-bar {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: var(--shadow);
+  z-index: 100000;
+}
+.maintenance-admin-bar button {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.2s;
+}
+.maintenance-admin-bar button:hover {
+  background: rgba(255,255,255,0.3);
+}
+
 /* COOKIE BANNER */
 .cookie-banner {
   position: fixed;
@@ -2818,9 +2978,11 @@ footer .brand {
   .nav-toggle { display: flex; }
   section { padding: 4rem 1.25rem; }
   .hero { padding: 7rem 1.25rem 3rem; min-height: auto; }
-  .hero-inner { grid-template-columns: 1fr; gap: 2.5rem; }
-  .hero-visual { max-width: 320px; margin: 0 auto; }
-  .hero-actions .btn { flex: 1; min-width: 140px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .hero-visual { max-width: 280px; margin: 0 auto; }
+  .hero-actions { flex-direction: column; gap: 0.7rem; }
+  .hero-actions .btn { width: 100%; }
+  .hero-trust { font-size: 0.78rem; gap: 1rem; }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .about-image { max-width: 380px; margin: 0 auto; }
   .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; }
@@ -4421,12 +4583,33 @@ body.edit-mode-active [data-edit].edited::before {
 </head>
 <body>
 
+<!-- MAINTENANCE OVERLAY -->
+<div id="maintenanceOverlay" class="maintenance-overlay" style="display:none;">
+  <div class="maintenance-inner">
+    <div class="maintenance-symbol">
+      <svg width="80" height="80" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="50" cy="50" r="35" stroke-dasharray="4 4" opacity="0.4"/>
+        <path d="M30 50 Q50 30 70 50 Q50 70 30 50" stroke-linecap="round" fill="none"/>
+        <circle cx="50" cy="50" r="3" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1 id="maintenanceTitle">In liebevoller Bearbeitung</h1>
+    <p id="maintenanceMessage">Hier entsteht gerade etwas Neues. Schau bald wieder vorbei – ich freue mich auf dich.</p>
+    <p id="maintenanceContact" class="maintenance-contact" style="display:none;">
+      Für dringende Anliegen: <a id="maintenanceEmail" href="mailto:info@soulbynici.ch">info@soulbynici.ch</a>
+    </p>
+    <div class="maintenance-brand">
+      <em>Nicole · soulbynici</em>
+    </div>
+  </div>
+</div>
+
 <!-- NAVIGATION -->
 <nav class="nav">
   <div class="nav-inner">
     <div class="brand" onclick="scrollToSection('home')">
-      <div class="brand-mark">S</div>
-      <span>Soul by Nici</span>
+      <div class="brand-mark">s</div>
+      <span class="brand-text">soulbynici</span>
     </div>
     <ul class="nav-links" id="navLinks">
       <li><a onclick="scrollToSection('home')">Start</a></li>
@@ -4434,7 +4617,7 @@ body.edit-mode-active [data-edit].edited::before {
       <li><a onclick="scrollToSection('process')">Ablauf</a></li>
       <li><a onclick="scrollToSection('offers')">Angebote</a></li>
       <li><a onclick="scrollToSection('booking')">Buchung</a></li>
-      <li><a onclick="scrollToSection('shop')">Inhalte</a></li>
+      <li><a onclick="scrollToSection('shop')">Mitgliederbereich</a></li>
       <li><a onclick="scrollToSection('faq')">FAQ</a></li>
       <li><a onclick="scrollToSection('business')">Business</a></li>
       <li><a onclick="scrollToSection('contact')">Kontakt</a></li>
@@ -4474,11 +4657,10 @@ body.edit-mode-active [data-edit].edited::before {
           <span data-edit="hero-cta-primary">Termin buchen</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </button>
-        <button class="btn btn-secondary" onclick="scrollToSection('about')" data-edit="hero-cta-secondary">Mehr erfahren</button>
+        <button class="btn btn-secondary" onclick="scrollToSection('offers')" data-edit="hero-cta-secondary">Mehr erfahren</button>
       </div>
-      <div class="hero-trust">
-        <span class="hero-trust-item" data-edit="hero-trust-1">Über 200 begleitete Sitzungen</span>
-        <span class="hero-trust-item" data-edit="hero-trust-2">Online · in deinem Raum, in deiner Zeit</span>
+      <div class="hero-trust hero-trust-centered">
+        <span class="hero-trust-item" data-edit="hero-trust-1">Online · in deinem Raum, in deiner Zeit</span>
       </div>
     </div>
   </div>
@@ -4498,7 +4680,8 @@ body.edit-mode-active [data-edit].edited::before {
       </div>
       <div class="about-content reveal">
         <span class="section-eyebrow" data-edit="about-eyebrow">Über mich</span>
-        <h2 data-edit="about-h2">Nicole Zauta — <em>Energiearbeiterin</em> & Begleiterin</h2>
+        <h2 class="about-h2-block" data-edit="about-h2">Nicole Zauta</h2>
+        <div class="about-subtitle" data-edit="about-subtitle">Aura- &amp; Chakramonia Therapeutin</div>
         <p data-edit="about-p1">Mein Name ist Nicole. Ich begleite Menschen, die spüren, dass da mehr ist – mehr Tiefe, mehr Wahrhaftigkeit, mehr Verbindung zu sich selbst. Aus eigenem Erleben weiss ich, wie es sich anfühlt, sich selbst aus den Augen zu verlieren.</p>
         <p data-edit="about-p2">In meinen Sitzungen schaffe ich einen Raum aus Stille und Sicherheit. Hier darfst du loslassen, was dich nicht mehr nährt, und dich erinnern an das, was du im Innersten schon immer warst – ganz, frei und mit dir selbst verbunden.</p>
         <p data-edit="about-p3">Meine Arbeit verbindet intuitive Energiearbeit mit achtsamem Coaching und körperorientierter Begleitung. Jede Sitzung ist ein einzigartiger Moment.</p>
@@ -4514,10 +4697,10 @@ body.edit-mode-active [data-edit].edited::before {
   <div class="parallax-quote-inner">
     <div class="parallax-quote-mark">"</div>
     <div class="parallax-quote-text" data-edit="quote1-text">
-      Heilung beginnt nicht dort, wo wir mehr werden –<br>
-      sondern dort, wo wir wieder anfangen, ganz zu sein.
+      Heilung beginnt dort, wo wir den Blick<br>
+      von aussen nach innen richten.
     </div>
-    <div class="parallax-quote-author" data-edit="quote1-author">Soul by Nici</div>
+    <div class="parallax-quote-author" data-edit="quote1-author">soulbynici</div>
   </div>
 </section>
 
@@ -4885,7 +5068,7 @@ body.edit-mode-active [data-edit].edited::before {
           wir gemeinsam, ob und wie ich dich unterstützen kann.
         </p>
         <div class="business-cta-actions">
-          <a href="mailto:hello@soulbynici.ch?subject=Anfrage%20Business-Dienstleistungen" class="btn btn-primary" id="businessCtaEmailBtn">
+          <a href="mailto:info@zauta.ch?subject=Anfrage%20Business-Dienstleistungen" class="btn btn-primary" id="businessCtaEmailBtn">
             <span data-edit="business-cta-email">E-Mail schreiben</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
@@ -4940,15 +5123,19 @@ body.edit-mode-active [data-edit].edited::before {
         <ul class="contact-list">
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16v12H4z"/><path d="M4 6l8 7 8-7"/></svg>
-            hello@soulbynici.ch
+            <span><span data-edit="contact-mail-label-1">Energiearbeit:</span> <a href="mailto:info@soulbynici.ch" data-edit="contact-mail-1">info@soulbynici.ch</a></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16v12H4z"/><path d="M4 6l8 7 8-7"/></svg>
+            <span><span data-edit="contact-mail-label-2">Business:</span> <a href="mailto:info@zauta.ch" data-edit="contact-mail-2">info@zauta.ch</a></span>
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Schweiz · Sitzungen finden online statt
+            <span data-edit="contact-location">Alle Termine finden online statt</span>
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            Termine auf Vereinbarung
+            <span data-edit="contact-availability">Termine nach Vereinbarung</span>
           </li>
         </ul>
       </div>
@@ -4964,10 +5151,10 @@ body.edit-mode-active [data-edit].edited::before {
 <!-- FOOTER -->
 <footer>
   <div class="brand">
-    <div class="brand-mark">S</div>
-    <span>Soul by Nici</span>
+    <div class="brand-mark">s</div>
+    <span class="brand-text">soulbynici</span>
   </div>
-  <p>Energiearbeit · Selbstverbindung · Heilung</p>
+  <p>Energiearbeit · Heilung · Selbstverbindung</p>
   <div class="footer-links">
     <a onclick="scrollToSection('about')">Über mich</a>
     <a onclick="scrollToSection('offers')">Angebote</a>
@@ -4981,7 +5168,7 @@ body.edit-mode-active [data-edit].edited::before {
     <a onclick="openModal('datenschutzModal')">Datenschutz</a>
     <a onclick="openModal('cookieSettingsModal')">Cookie-Einstellungen</a>
   </div>
-  <p style="margin-top:1.5rem; font-size:0.78rem;">© <span id="year"></span> Nicole Zauta · Soul by Nici · Mit Liebe gemacht in der Schweiz</p>
+  <p style="margin-top:1.5rem; font-size:0.78rem;">© <span id="year"></span> Nicole Zauta · soulbynici · Mit Liebe gemacht in der Schweiz</p>
 </footer>
 
 <!-- STICKY MOBILE CTA -->
@@ -5141,6 +5328,35 @@ body.edit-mode-active [data-edit].edited::before {
         <button class="btn btn-secondary btn-sm" onclick="switchAdminTab(null,'schedule')">Verfügbarkeit ändern</button>
         <button class="btn btn-secondary btn-sm" onclick="switchAdminTab(null,'texts')">Texte bearbeiten</button>
         <button class="btn btn-secondary btn-sm" onclick="switchAdminTab(null,'testimonials')">Stimme hinzufügen</button>
+      </div>
+
+      <!-- MAINTENANCE -->
+      <h4 class="admin-section-label" style="margin-top:2rem;">Wartungs-Modus</h4>
+      <div style="background: var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1.4rem;">
+        <p style="font-size:0.88rem; color:var(--text-soft); margin:0 0 1rem; line-height:1.6;">
+          Wenn aktiv, sehen Besucher*innen einen schönen „In Bearbeitung"-Screen statt der normalen Webseite. Du als Admin siehst die Seite ganz normal — mit einem kleinen Hinweis-Bar unten rechts.
+        </p>
+
+        <label style="display:flex; align-items:center; gap:0.7rem; cursor:pointer; margin-bottom:1.2rem; padding:0.8rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);">
+          <input type="checkbox" id="maintCheckbox" onchange="setMaintenanceMode(this.checked)" style="width:18px; height:18px; cursor:pointer;">
+          <span style="font-weight:500;">Wartungs-Modus einschalten</span>
+        </label>
+
+        <div class="form-group">
+          <label class="form-label">Überschrift</label>
+          <input type="text" class="form-input" id="maintTitle" placeholder="In liebevoller Bearbeitung">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nachricht</label>
+          <textarea class="form-textarea" id="maintMessage" rows="3" placeholder="Hier entsteht gerade etwas Neues..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kontakt-E-Mail (optional, wird auf Wartungsseite angezeigt)</label>
+          <input type="email" class="form-input" id="maintEmail" placeholder="info@soulbynici.ch">
+        </div>
+
+        <button class="btn btn-primary btn-sm" onclick="saveMaintenanceTexts()">Speichern</button>
+        <button class="btn btn-ghost btn-sm" onclick="previewMaintenance()">Vorschau ansehen</button>
       </div>
     </div>
 
@@ -5702,13 +5918,13 @@ body.edit-mode-active [data-edit].edited::before {
       <h3>Verantwortlich für den Inhalt</h3>
       <p>
         <span data-edit="impressum-name">Nicole Zauta</span><br>
-        <span data-edit="impressum-firma">Soul by Nici</span><br>
+        <span data-edit="impressum-firma">soulbynici</span><br>
         <span data-edit="impressum-adresse">Schweiz</span>
       </p>
 
       <h3>Kontakt</h3>
       <p>
-        E-Mail: <span data-edit="impressum-email">hello@soulbynici.ch</span><br>
+        E-Mail: <span data-edit="impressum-email">info@soulbynici.ch</span><br>
         Web: <span data-edit="impressum-web">www.soulbynici.ch</span>
       </p>
 
@@ -5738,9 +5954,9 @@ body.edit-mode-active [data-edit].edited::before {
 
       <h3 data-edit="dsg-h1">1. Verantwortliche Stelle</h3>
       <p data-edit="dsg-p1a">
-        <span data-edit="dsg-name">Nicole Zauta · Soul by Nici</span><br>
+        <span data-edit="dsg-name">Nicole Zauta · soulbynici</span><br>
         <span data-edit="dsg-adresse">Schweiz</span><br>
-        E-Mail: <span data-edit="dsg-email">hello@soulbynici.ch</span>
+        E-Mail: <span data-edit="dsg-email">info@soulbynici.ch</span>
       </p>
       <p data-edit="dsg-p1b">Für alle Fragen rund um den Datenschutz bin ich deine direkte Ansprechperson.</p>
 
@@ -5807,7 +6023,7 @@ body.edit-mode-active [data-edit].edited::before {
         <li><strong>Widerruf:</strong> Widerruf einer erteilten Einwilligung jederzeit möglich</li>
         <li><strong>Datenübertragbarkeit:</strong> Erhalt deiner Daten in einem gängigen Format</li>
       </ul>
-      <p data-edit="dsg-p8-foot">Eine kurze E-Mail an <span data-edit="dsg-rights-email">hello@soulbynici.ch</span> genügt.</p>
+      <p data-edit="dsg-p8-foot">Eine kurze E-Mail an <span data-edit="dsg-rights-email">info@soulbynici.ch</span> genügt.</p>
 
       <h3 data-edit="dsg-h9">9. Aufbewahrungsdauer</h3>
       <ul data-edit="dsg-l9">
@@ -6047,8 +6263,13 @@ const Cloud = {
         } catch(e) { console.error('processSteps-Config parse error', e); }
       }
 
-      if (settings[0] && settings[0].availability) {
-        Storage.set('availability', settings[0].availability);
+      if (settings[0]) {
+        if (settings[0].availability) {
+          Storage.set('availability', settings[0].availability);
+        }
+        // Komplette Settings cachen für Maintenance-Mode etc.
+        Storage.set('siteSettings', settings[0]);
+        applyMaintenanceMode(settings[0]);
       }
     } catch (e) {
       console.error('[Cloud.syncDown]', e);
@@ -6085,6 +6306,145 @@ function sendBookingEmail(bookingIds) {
     .catch(err => {
       console.warn('[sendBookingEmail] Fehler (Buchung wurde trotzdem gespeichert)', err);
     });
+}
+
+/* ============================================
+   MAINTENANCE MODE
+   ============================================ */
+function applyMaintenanceMode(settings) {
+  const overlay = document.getElementById('maintenanceOverlay');
+  if (!overlay) return;
+
+  const isOn = settings && settings.maintenance_mode === true;
+  const isAdmin = Cloud.ready && Cloud.isAuth();
+
+  // Admin-Hinweis-Bar entfernen falls vorhanden
+  const oldBar = document.getElementById('maintenanceAdminBar');
+  if (oldBar) oldBar.remove();
+
+  if (!isOn) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    return;
+  }
+
+  document.getElementById('maintenanceTitle').textContent = settings.maintenance_title || 'In liebevoller Bearbeitung';
+  document.getElementById('maintenanceMessage').textContent = settings.maintenance_message || 'Hier entsteht gerade etwas Neues. Schau bald wieder vorbei – ich freue mich auf dich.';
+
+  const email = settings.maintenance_email;
+  const contactEl = document.getElementById('maintenanceContact');
+  if (email) {
+    contactEl.style.display = '';
+    const emailEl = document.getElementById('maintenanceEmail');
+    emailEl.href = 'mailto:' + email;
+    emailEl.textContent = email;
+  } else {
+    contactEl.style.display = 'none';
+  }
+
+  if (isAdmin) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    const bar = document.createElement('div');
+    bar.id = 'maintenanceAdminBar';
+    bar.className = 'maintenance-admin-bar';
+    bar.innerHTML = `<span>🔧 Wartungs-Modus aktiv</span><button onclick="setMaintenanceMode(false)">Ausschalten</button>`;
+    document.body.appendChild(bar);
+  } else {
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+async function setMaintenanceMode(on, opts = {}) {
+  if (!Cloud.ready || !Cloud.isAuth()) {
+    showToast('Nur als Admin verfügbar.');
+    return;
+  }
+  try {
+    const update = { id: 1, maintenance_mode: !!on };
+    if (opts.title !== undefined)   update.maintenance_title = opts.title;
+    if (opts.message !== undefined) update.maintenance_message = opts.message;
+    if (opts.email !== undefined)   update.maintenance_email = opts.email;
+    await Cloud.upsertOne('site_settings', update, 'id');
+
+    const cached = Storage.get('siteSettings', {});
+    Object.assign(cached, {
+      maintenance_mode: !!on,
+      maintenance_title: update.maintenance_title ?? cached.maintenance_title,
+      maintenance_message: update.maintenance_message ?? cached.maintenance_message,
+      maintenance_email: update.maintenance_email ?? cached.maintenance_email
+    });
+    Storage.set('siteSettings', cached);
+
+    applyMaintenanceMode(cached);
+    showToast(on ? 'Wartungs-Modus eingeschaltet' : 'Wartungs-Modus ausgeschaltet');
+
+    const cb = document.getElementById('maintCheckbox');
+    if (cb) cb.checked = !!on;
+  } catch (err) {
+    console.error(err);
+    showToast('Fehler: ' + (err.message || ''));
+  }
+}
+
+async function saveMaintenanceTexts() {
+  const titleEl   = document.getElementById('maintTitle');
+  const messageEl = document.getElementById('maintMessage');
+  const emailEl   = document.getElementById('maintEmail');
+  const cbEl      = document.getElementById('maintCheckbox');
+  if (!titleEl || !messageEl || !emailEl || !cbEl) return;
+  await setMaintenanceMode(cbEl.checked, {
+    title: titleEl.value.trim(),
+    message: messageEl.value.trim(),
+    email: emailEl.value.trim()
+  });
+}
+
+/**
+ * Lädt die aktuellen Maintenance-Texte in die Admin-Felder.
+ * Wird aufgerufen wenn Übersicht-Tab geöffnet wird.
+ */
+function loadMaintenanceFields() {
+  const settings = Storage.get('siteSettings', {});
+  const titleEl   = document.getElementById('maintTitle');
+  const messageEl = document.getElementById('maintMessage');
+  const emailEl   = document.getElementById('maintEmail');
+  const cbEl      = document.getElementById('maintCheckbox');
+  if (!titleEl) return;
+  titleEl.value   = settings.maintenance_title   || 'In liebevoller Bearbeitung';
+  messageEl.value = settings.maintenance_message || 'Hier entsteht gerade etwas Neues. Schau bald wieder vorbei – ich freue mich auf dich.';
+  emailEl.value   = settings.maintenance_email   || '';
+  cbEl.checked    = settings.maintenance_mode === true;
+}
+
+/**
+ * Zeigt die Wartungsseite kurz für 4 Sek. zum Anschauen, auch als Admin.
+ */
+function previewMaintenance() {
+  const overlay = document.getElementById('maintenanceOverlay');
+  if (!overlay) return;
+  // Aktuelle Felder reinschreiben für die Vorschau
+  document.getElementById('maintenanceTitle').textContent =
+    document.getElementById('maintTitle').value.trim() || 'In liebevoller Bearbeitung';
+  document.getElementById('maintenanceMessage').textContent =
+    document.getElementById('maintMessage').value.trim() || 'Hier entsteht gerade etwas Neues...';
+  const email = document.getElementById('maintEmail').value.trim();
+  const contactEl = document.getElementById('maintenanceContact');
+  if (email) {
+    contactEl.style.display = '';
+    document.getElementById('maintenanceEmail').href = 'mailto:' + email;
+    document.getElementById('maintenanceEmail').textContent = email;
+  } else {
+    contactEl.style.display = 'none';
+  }
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  showToast('Vorschau für 4 Sek. – wird automatisch geschlossen');
+  setTimeout(() => {
+    // Restoriere normalen Zustand basierend auf echten Settings
+    applyMaintenanceMode(Storage.get('siteSettings', {}));
+  }, 4000);
 }
 
 /* ============================================
@@ -6863,6 +7223,8 @@ async function handleAdminLogin(e) {
     applyCustomTexts();
     renderCalendar();
     renderSlots();
+    // Maintenance-Status neu anwenden (Admin sieht jetzt Hinweis-Bar statt Overlay)
+    applyMaintenanceMode(Storage.get('siteSettings', {}));
     openAdminPanel();
   } catch (err) {
     console.error(err);
@@ -6879,6 +7241,8 @@ async function adminLogout() {
   closeModal('adminPanelModal');
   if (typeof deactivateEditMode === 'function') deactivateEditMode();
   updateEditFabVisibility();
+  // Maintenance-Status neu anwenden
+  applyMaintenanceMode(Storage.get('siteSettings', {}));
   showToast('Admin abgemeldet');
 }
 
@@ -6938,7 +7302,7 @@ function switchAdminTab(e, panel) {
   const panelEl = document.getElementById('panel-' + target);
   if (panelEl) panelEl.classList.add('active');
 
-  if (target === 'overview') renderAdminStats();
+  if (target === 'overview') { renderAdminStats(); loadMaintenanceFields(); }
   if (target === 'clients') {
     ClientView.current = null;
     document.getElementById('clientsListView').style.display = '';
@@ -7109,8 +7473,8 @@ const PLATFORMS = {
 const DEFAULT_LINKS = [
   { id: 'booking', platform: 'booking', enabled: true, url: '#booking', subtitle: 'Online-Kalender' },
   { id: 'instagram', platform: 'instagram', enabled: true, url: 'https://instagram.com/soulbynici', subtitle: '@soulbynici' },
-  { id: 'whatsapp', platform: 'whatsapp', enabled: false, url: '', subtitle: 'Direkt schreiben' },
-  { id: 'email', platform: 'email', enabled: true, url: 'mailto:hello@soulbynici.ch', subtitle: 'hello@soulbynici.ch' },
+  { id: 'whatsapp', platform: 'whatsapp', enabled: true, url: 'https://wa.me/41795388224', subtitle: '+41 79 538 82 24' },
+  { id: 'email', platform: 'email', enabled: true, url: 'mailto:info@soulbynici.ch', subtitle: 'info@soulbynici.ch' },
   { id: 'newsletter', platform: 'newsletter', enabled: true, url: '#newsletter-section', subtitle: 'Sanfte Impulse abonnieren' },
   { id: 'phone', platform: 'phone', enabled: false, url: '', subtitle: 'Auf Vereinbarung' },
   { id: 'tiktok', platform: 'tiktok', enabled: false, url: 'https://www.tiktok.com/@soulbynici', subtitle: '@soulbynici' },
@@ -7358,17 +7722,6 @@ function applyCustomImages() {
     } else {
       logoPreview.style.backgroundImage = '';
       logoPreview.classList.remove('has-logo');
-    }
-  }
-
-  // Business-CTA-Mail-Button: Mail aus Email-Link übernehmen
-  const emailBtn = document.getElementById('businessCtaEmailBtn');
-  if (emailBtn) {
-    const links = getLinks();
-    const emailLink = links.find(l => l.id === 'email' && l.enabled);
-    if (emailLink && emailLink.url) {
-      const baseUrl = emailLink.url.split('?')[0];
-      emailBtn.href = baseUrl + '?subject=' + encodeURIComponent('Anfrage Business-Dienstleistungen');
     }
   }
 }
@@ -8338,6 +8691,7 @@ function renderShopProducts() {
   if (!grid) return;
   // Nur aktive Produkte für Public anzeigen
   const products = getProducts().filter(p => p.active !== false);
+  grid.setAttribute('data-count', products.length);
 
   if (products.length === 0) {
     grid.innerHTML = '<div class="shop-empty">Hier entstehen bald wundervolle Inhalte. Schau bald wieder vorbei.</div>';
@@ -8763,8 +9117,10 @@ function renderOfferCardsFromConfig() {
         <p class="offer-desc">${escapeHtml(t.tagline || t.description || '')}</p>
         ${features ? `<ul class="offer-features">${features}</ul>` : ''}
         <div class="offer-price">
-          <span class="offer-price-currency">${t.price > 0 ? 'CHF' : ''}</span>
-          <span>${t.price > 0 ? t.price : t.priceLabel}</span>
+          ${t.price > 0
+            ? `<span class="offer-price-currency">CHF</span><span>${t.price}</span>`
+            : `<span class="offer-price-free">${escapeHtml(t.priceLabel || 'kostenlos')}</span>`
+          }
           <span class="offer-price-unit">${escapeHtml(t.priceSubtext || '')}</span>
         </div>
         <button class="${btnClass}" onclick="goToBooking('${t.id}')">${escapeHtml(ctaLabel)}</button>
@@ -10180,6 +10536,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyCustomTexts();
   observeReveals();
   showCookieBanner();
+
+  // Maintenance-Check sofort aus Cache
+  const cachedSettings = Storage.get('siteSettings', null);
+  if (cachedSettings) applyMaintenanceMode(cachedSettings);
 
   // 2. Cloud initialisieren
   Cloud.init();
