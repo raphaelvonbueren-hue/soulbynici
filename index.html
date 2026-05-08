@@ -2832,6 +2832,81 @@ footer .brand {
   background: rgba(255,255,255,0.3);
 }
 
+/* ============================================
+   MOBILE PARALLAX-FIX + UI-VERBESSERUNGEN
+   ============================================ */
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  /* iOS Safari & Mobile rendern background-attachment:fixed nicht zuverlässig.
+     Wir ersetzen es durch scroll, sonst bleiben die Hintergrundbilder weiß. */
+  .hero,
+  .parallax-quote,
+  .business-hero {
+    background-attachment: scroll !important;
+  }
+
+  /* Auf Mobile etwas mehr Padding + zentrierte Inhalte */
+  .parallax-quote {
+    min-height: 60vh !important;
+    background-position: center !important;
+  }
+
+  /* Bilder: subtle "Ken Burns"-Effekt — sanfter Zoom & Drift, lauffähig auf Mobile */
+  .hero, .business-hero {
+    background-size: 110% auto;
+    animation: kenburns-slow 20s ease-in-out infinite alternate;
+  }
+
+  /* Quote-Bilder bekommen sanften Atmungs-Effekt */
+  .parallax-quote {
+    background-size: 115% auto;
+    animation: kenburns-breathe 16s ease-in-out infinite alternate;
+  }
+
+  /* Touch-Targets: alle Buttons mindestens 44×44px */
+  .btn, .btn-icon, .btn-icon-sm, .nav-toggle {
+    min-height: 44px;
+  }
+
+  /* Cards bekommen einen leichten Hover-Equivalenz beim Tap (active state) */
+  .offer-card:active,
+  .shop-card:active {
+    transform: translateY(-2px) scale(0.99);
+    transition: transform 0.15s ease;
+  }
+
+  /* Schöner Reveal: subtiler beim Scrollen */
+  .reveal {
+    transform: translateY(30px);
+    opacity: 0;
+    transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* Quote-Marks pulsieren sanft */
+  .parallax-quote-mark {
+    animation: quote-glow 4s ease-in-out infinite;
+  }
+}
+
+/* Ken-Burns für Hero & Business-Hero */
+@keyframes kenburns-slow {
+  0%   { background-position: 50% 50%; background-size: 110% auto; }
+  100% { background-position: 52% 48%; background-size: 115% auto; }
+}
+/* Quote-Bilder: ruhigere Atmung */
+@keyframes kenburns-breathe {
+  0%   { background-position: 50% 50%; background-size: 115% auto; }
+  100% { background-position: 51% 51%; background-size: 120% auto; }
+}
+/* Quote-Mark-Pulsation */
+@keyframes quote-glow {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+
 /* COOKIE BANNER */
 .cookie-banner {
   position: fixed;
@@ -2984,7 +3059,12 @@ footer .brand {
   .hero-actions .btn { width: 100%; }
   .hero-trust { font-size: 0.78rem; gap: 1rem; }
   .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-  .about-image { max-width: 380px; margin: 0 auto; }
+  .about-image {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    min-height: 380px; /* Fallback falls aspect-ratio versagt */
+  }
   .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .pack-steps { grid-template-columns: repeat(2, 1fr); }
   .modal { padding: 2rem 1.5rem; }
@@ -3746,7 +3826,7 @@ footer .brand {
 .about-image {
   --about-image-url: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80');
   background:
-    linear-gradient(160deg, rgba(176, 137, 104, 0.3), rgba(79, 108, 126, 0.55)),
+    linear-gradient(160deg, rgba(176, 137, 104, 0.05), rgba(79, 108, 126, 0.10)),
     var(--about-image-url) center/cover;
   position: relative;
   aspect-ratio: 3/4;
@@ -4042,7 +4122,7 @@ footer .brand {
   aspect-ratio: 4/5;
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(160deg, rgba(176, 137, 104, 0.25), rgba(79, 108, 126, 0.5)),
+    linear-gradient(160deg, rgba(176, 137, 104, 0.05), rgba(79, 108, 126, 0.10)),
     var(--business-about-url) center/cover;
   box-shadow: var(--shadow-lg);
   position: relative;
@@ -4160,7 +4240,12 @@ footer .brand {
     grid-template-columns: 1fr;
     gap: 2.5rem;
   }
-  .business-about-image { max-width: 380px; margin: 0 auto; }
+  .business-about-image {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    min-height: 420px; /* 4:5 Aspect bei 380 Breite */
+  }
   .business-stats { gap: 0.5rem; }
   .business-stat-num { font-size: 2rem; }
   .business-cta { padding: 3rem 1.5rem; }
