@@ -2849,23 +2849,44 @@ footer .brand {
   height: 65vw;
   max-width: 700px;
   max-height: 700px;
-  background-image: url('/butterfly-bg.png');
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-  opacity: 0.08;
   pointer-events: none;
-  filter: invert(1) brightness(2);
   z-index: 1;
   display: block !important;
-  animation: butterfly-breathe 8s ease-in-out infinite;
+  animation: butterfly-breathe 8s ease-in-out infinite, butterfly-glow 7s ease-in-out infinite;
   transform-origin: center;
+
+  /* Mask: nur dort sichtbar wo der Schmetterling ist */
+  -webkit-mask-image: url('/butterfly-bg.png');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  -webkit-mask-position: center;
+  mask-image: url('/butterfly-bg.png');
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mask-position: center;
+
+  /* Zwei Layer:
+     1. Diagonaler Lichtstreifen (animiert, wandert)
+     2. Schmetterling-Grundton (statisch, weisslich-warm) */
+  background:
+    linear-gradient(135deg,
+      transparent 35%,
+      rgba(255, 245, 210, 0.6) 48%,
+      rgba(255, 250, 230, 0.95) 50%,
+      rgba(255, 245, 210, 0.6) 52%,
+      transparent 65%
+    ) -100% -100% / 250% 250% no-repeat,
+    rgba(255, 250, 240, 0.55);
 }
 .hero-inner { position: relative; z-index: 2; }
 
 @keyframes butterfly-breathe {
-  0%, 100% { opacity: 0.06; transform: scale(1) rotate(0deg); }
-  50%      { opacity: 0.11; transform: scale(1.04) rotate(0.5deg); }
+  0%, 100% { opacity: 0.10; transform: scale(1) rotate(0deg); }
+  50%      { opacity: 0.16; transform: scale(1.04) rotate(0.5deg); }
+}
+@keyframes butterfly-glow {
+  0%, 100% { background-position: -100% -100%, 0 0; }
+  50%      { background-position: 250% 250%, 0 0; }
 }
 
 /* Quote 1: links oben, mittelgross */
