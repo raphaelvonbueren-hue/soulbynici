@@ -3122,24 +3122,33 @@ footer .brand {
     background-attachment: scroll !important;
   }
 
+  /* GLOBALER FIX: ALLE Hintergrund-Bilder bekommen no-repeat + cover.
+     Verhindert das Bild-Verdoppeln auf Mobile wenn Bild schmaler als Section ist. */
+  .hero,
+  .parallax-quote,
+  .parallax-quote.q1,
+  .parallax-quote.q2,
+  .parallax-quote.q3,
+  .business-hero,
+  .about-image,
+  .business-about-image {
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-position: center !important;
+  }
+
   /* Auf Mobile etwas mehr Padding + zentrierte Inhalte */
   .parallax-quote {
     min-height: 60vh !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
   }
 
   /* Bilder: subtle "Ken Burns"-Effekt — sanfter Zoom & Drift, lauffähig auf Mobile */
   .hero, .business-hero {
-    background-size: cover;
-    background-repeat: no-repeat;
     animation: kenburns-slow 20s ease-in-out infinite alternate;
   }
 
   /* Quote-Bilder bekommen sanften Atmungs-Effekt */
   .parallax-quote {
-    background-size: cover;
-    background-repeat: no-repeat;
     animation: kenburns-breathe 16s ease-in-out infinite alternate;
   }
 
@@ -3172,17 +3181,17 @@ footer .brand {
   }
 }
 
-/* Ken-Burns für Hero & Business-Hero */
+/* Ken-Burns für Hero & Business-Hero — nur Position drifted */
 @keyframes kenburns-slow {
-  0%   { background-position: 50% 50%; background-size: cover; }
-  50%  { background-position: 52% 48%; background-size: 110% 110%; }
-  100% { background-position: 50% 50%; background-size: cover; }
+  0%   { background-position: 50% 50%; }
+  50%  { background-position: 53% 47%; }
+  100% { background-position: 50% 50%; }
 }
 /* Quote-Bilder: ruhigere Atmung */
 @keyframes kenburns-breathe {
-  0%   { background-position: 50% 50%; background-size: cover; }
-  50%  { background-position: 51% 51%; background-size: 108% 108%; }
-  100% { background-position: 50% 50%; background-size: cover; }
+  0%   { background-position: 50% 50%; }
+  50%  { background-position: 52% 52%; }
+  100% { background-position: 50% 50%; }
 }
 /* Quote-Mark-Pulsation */
 @keyframes quote-glow {
