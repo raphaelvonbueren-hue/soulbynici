@@ -2831,6 +2831,81 @@ footer .brand {
 }
 
 /* ============================================
+   ANIMIERTE WELLEN IM HERO
+   SVG-Wellenlinien wandern über dem See-Bild
+   ============================================ */
+.hero-waves {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+.hero-waves svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+}
+.hero-wave {
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+.hero-wave-1 {
+  animation: hero-wave-drift 18s linear infinite;
+  opacity: 0.8;
+}
+.hero-wave-2 {
+  fill: rgba(255, 255, 255, 0.05);
+  stroke: rgba(255, 255, 255, 0.14);
+  animation: hero-wave-drift 26s linear infinite reverse;
+  opacity: 0.7;
+}
+.hero-wave-3 {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.10);
+  animation: hero-wave-drift 34s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes hero-wave-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-400px); }
+}
+
+/* Sanftes vertikales Wabern obendrein, damit es lebendig wirkt */
+.hero-waves svg {
+  animation: hero-wave-bob 6s ease-in-out infinite;
+}
+@keyframes hero-wave-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* Mobile: kompakter und etwas zurückhaltender */
+@media (max-width: 700px) {
+  .hero-waves {
+    height: 45%;
+    opacity: 0.45;
+  }
+}
+
+/* Reduced motion: keine Wellen-Bewegung */
+@media (prefers-reduced-motion: reduce) {
+  .hero-wave-1, .hero-wave-2, .hero-wave-3,
+  .hero-waves svg {
+    animation: none;
+  }
+}
+
+/* ============================================
    SCHMETTERLING ALS HINTERGRUND-DEKO
    Subtil großer Schmetterling in Sektionen
    ============================================ */
@@ -4931,6 +5006,20 @@ body.edit-mode-active [data-edit].edited::before {
   <div class="hero-decor-circle c1"></div>
   <div class="hero-decor-circle c2"></div>
   <div class="hero-decor-circle c3"></div>
+
+  <!-- Animierte Wellen über dem See-Bild -->
+  <div class="hero-waves" aria-hidden="true">
+    <svg viewBox="0 0 1440 280" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="hero-wave-path-1" d="M-200,140 Q120,100 320,140 T720,140 T1120,140 T1520,140 T1920,140 V280 H-200 Z"/>
+        <path id="hero-wave-path-2" d="M-200,180 Q160,150 360,180 T760,180 T1160,180 T1560,180 T1960,180 V280 H-200 Z"/>
+        <path id="hero-wave-path-3" d="M-200,220 Q140,200 340,220 T740,220 T1140,220 T1540,220 T1940,220 V280 H-200 Z"/>
+      </defs>
+      <use href="#hero-wave-path-1" class="hero-wave hero-wave-1"/>
+      <use href="#hero-wave-path-2" class="hero-wave hero-wave-2"/>
+      <use href="#hero-wave-path-3" class="hero-wave hero-wave-3"/>
+    </svg>
+  </div>
 
   <div class="hero-inner">
     <div class="hero-content">
