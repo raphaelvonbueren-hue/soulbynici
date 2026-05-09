@@ -3126,17 +3126,20 @@ footer .brand {
   .parallax-quote {
     min-height: 60vh !important;
     background-position: center !important;
+    background-repeat: no-repeat !important;
   }
 
   /* Bilder: subtle "Ken Burns"-Effekt — sanfter Zoom & Drift, lauffähig auf Mobile */
   .hero, .business-hero {
-    background-size: 110% auto;
+    background-size: cover;
+    background-repeat: no-repeat;
     animation: kenburns-slow 20s ease-in-out infinite alternate;
   }
 
   /* Quote-Bilder bekommen sanften Atmungs-Effekt */
   .parallax-quote {
-    background-size: 115% auto;
+    background-size: cover;
+    background-repeat: no-repeat;
     animation: kenburns-breathe 16s ease-in-out infinite alternate;
   }
 
@@ -3171,13 +3174,15 @@ footer .brand {
 
 /* Ken-Burns für Hero & Business-Hero */
 @keyframes kenburns-slow {
-  0%   { background-position: 50% 50%; background-size: 110% auto; }
-  100% { background-position: 52% 48%; background-size: 115% auto; }
+  0%   { background-position: 50% 50%; background-size: cover; }
+  50%  { background-position: 52% 48%; background-size: 110% 110%; }
+  100% { background-position: 50% 50%; background-size: cover; }
 }
 /* Quote-Bilder: ruhigere Atmung */
 @keyframes kenburns-breathe {
-  0%   { background-position: 50% 50%; background-size: 115% auto; }
-  100% { background-position: 51% 51%; background-size: 120% auto; }
+  0%   { background-position: 50% 50%; background-size: cover; }
+  50%  { background-position: 51% 51%; background-size: 108% 108%; }
+  100% { background-position: 50% 50%; background-size: cover; }
 }
 /* Quote-Mark-Pulsation */
 @keyframes quote-glow {
