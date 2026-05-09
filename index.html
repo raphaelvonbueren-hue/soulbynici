@@ -4584,7 +4584,7 @@ footer .brand {
   color: var(--bg);
   border-radius: 100px;
   padding: 0.5rem 0.8rem;
-  display: flex;
+  display: none; /* Standardmäßig komplett versteckt — nur Admin-Edit-Mode zeigt sie */
   align-items: center;
   gap: 0.5rem;
   box-shadow: var(--shadow-lg);
@@ -4592,7 +4592,10 @@ footer .brand {
   font-size: 0.85rem;
   max-width: calc(100vw - 2rem);
 }
-.edit-toolbar.visible { transform: translateX(-50%) translateY(0); }
+.edit-toolbar.visible {
+  display: flex;
+  transform: translateX(-50%) translateY(0);
+}
 .edit-toolbar-status {
   display: flex;
   align-items: center;
@@ -8220,8 +8223,13 @@ function updateEditFabVisibility() {
     userBtn.classList.toggle('logged-in', isAdmin);
     userBtn.title = isAdmin ? 'Admin-Panel öffnen' : 'Admin-Bereich';
   }
-  if (!isAdmin && EditMode.active) {
-    deactivateEditMode();
+  if (!isAdmin) {
+    // Sicherheitshalber: Toolbar bei Nicht-Admin immer ausblenden
+    const tb = document.getElementById('editToolbar');
+    if (tb) tb.classList.remove('visible');
+    if (EditMode.active) {
+      deactivateEditMode();
+    }
   }
 }
 
