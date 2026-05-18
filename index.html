@@ -5285,6 +5285,16 @@ body.edit-mode-active [data-edit].edited::before {
             <textarea class="form-textarea" id="bookNotes" placeholder="Anliegen, Wünsche, Fragen …"></textarea>
           </div>
 
+          <!-- Rabattcode -->
+          <div class="form-group" id="discountCodeWrap">
+            <label class="form-label">Rabattcode (optional)</label>
+            <div style="display:flex; gap:0.5rem;">
+              <input type="text" class="form-input" id="bookDiscountCode" placeholder="z.B. SOMMER24" style="text-transform:uppercase; flex:1;" oninput="onDiscountCodeInput()">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="checkDiscountCode()">Prüfen</button>
+            </div>
+            <div id="discountCodeFeedback" style="margin-top:0.5rem; font-size:0.85rem; min-height:1.2rem;"></div>
+          </div>
+
           <!-- Wichtige Hinweise -->
           <div class="booking-terms">
             <div class="booking-terms-title">
@@ -5734,6 +5744,7 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="schedule" onclick="switchAdminTab(event,'schedule')">Verfügbarkeit</button>
       <button class="admin-tab" data-panel="offers" onclick="switchAdminTab(event,'offers')">Angebote</button>
       <button class="admin-tab" data-panel="shop" onclick="switchAdminTab(event,'shop')">Shop</button>
+      <button class="admin-tab" data-panel="discounts" onclick="switchAdminTab(event,'discounts')">Rabatte</button>
       <button class="admin-tab" data-panel="texts" onclick="switchAdminTab(event,'texts')">Texte</button>
       <button class="admin-tab" data-panel="images" onclick="switchAdminTab(event,'images')">Bilder</button>
       <button class="admin-tab" data-panel="links" onclick="switchAdminTab(event,'links')">Links</button>
@@ -6036,6 +6047,95 @@ body.edit-mode-active [data-edit].edited::before {
         <br><br>
         <strong>Phase 3 — Mitgliederbereich mit Login</strong> (folgt)<br>
         Klient*innen können sich einloggen und ihre gekauften Inhalte abrufen.
+      </div>
+    </div>
+
+    <!-- RABATTE / DISCOUNTS -->
+    <div class="admin-panel" id="panel-discounts">
+      <h4 class="admin-section-label">Rabatte &amp; Aktionen</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1.5rem; line-height:1.6;">
+        Erstelle Rabattcodes für Aktionen wie Black Friday, Sommer-Special oder Insta-Promotionen. Klient*innen geben den Code beim Buchen ein.
+      </p>
+
+      <!-- Bestehende Codes -->
+      <div id="adminDiscountsList"></div>
+
+      <div class="admin-actions" style="margin-top:1.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="openNewDiscountForm()">+ Neuer Rabattcode</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadDiscountsFromCloud()">Aus Cloud aktualisieren</button>
+      </div>
+
+      <!-- Formular für neuen Code -->
+      <div id="newDiscountForm" class="admin-add-form" style="display:none; margin-top:2rem;">
+        <h4 class="admin-section-label">Neuer Rabattcode</h4>
+        <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div class="form-group">
+            <label class="form-label">Aktions-Titel *</label>
+            <input type="text" class="form-input" id="newDiscTitle" placeholder="z.B. Black Friday 2026">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code *</label>
+            <input type="text" class="form-input" id="newDiscCode" placeholder="z.B. BLACK24" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div class="form-group">
+            <label class="form-label">Rabatt-Art</label>
+            <select class="form-input" id="newDiscType">
+              <option value="percent">Prozent (%)</option>
+              <option value="fixed">Fester Betrag (CHF)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Wert *</label>
+            <input type="number" class="form-input" id="newDiscValue" placeholder="z.B. 20" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gilt für</label>
+          <select class="form-input" id="newDiscApplies">
+            <option value="all">Alles (Sitzungen + Shop)</option>
+            <option value="bookings">Nur Sitzungen</option>
+            <option value="shop">Nur Shop-Produkte</option>
+          </select>
+        </div>
+        <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div class="form-group">
+            <label class="form-label">Gültig ab (optional)</label>
+            <input type="date" class="form-input" id="newDiscFrom">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gültig bis (optional)</label>
+            <input type="date" class="form-input" id="newDiscUntil">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max. Einlösungen (leer = unbegrenzt)</label>
+          <input type="number" class="form-input" id="newDiscMaxRedemptions" placeholder="z.B. 10 für die ersten 10 Personen" min="1">
+        </div>
+        <div class="admin-actions">
+          <button class="btn btn-primary btn-sm" onclick="saveNewDiscount()">Code anlegen</button>
+          <button class="btn btn-secondary btn-sm" onclick="closeNewDiscountForm()">Abbrechen</button>
+        </div>
+      </div>
+
+      <!-- Stammkundenstufen -->
+      <div style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border);">
+        <h4 class="admin-section-label">Stammkundenstufen</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
+          Eingeloggte Klient*innen bekommen automatisch einen Rabatt sobald sie eine bestimmte Anzahl Buchungen erreicht haben. Aktionscodes haben Vorrang vor Stammkundenrabatten.
+        </p>
+        <div id="loyaltyTiersList"></div>
+        <div class="admin-actions" style="margin-top:1rem;">
+          <button class="btn btn-primary btn-sm" onclick="addLoyaltyTier()">+ Stufe hinzufügen</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetLoyaltyTiers()">Auf Standard zurücksetzen</button>
+        </div>
+      </div>
+
+      <!-- Statistik -->
+      <div style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border);">
+        <h4 class="admin-section-label">Einlösungs-Statistik</h4>
+        <div id="discountStats" style="font-size:0.9rem; line-height:1.7;"></div>
       </div>
     </div>
 
@@ -7790,6 +7890,9 @@ function switchAdminTab(e, panel) {
   if (target === 'settings') {
     renderZoomLinkSetting();
   }
+  if (target === 'discounts') {
+    renderDiscountsPanel();
+  }
   if (target === 'offers') {
     renderAdminOffersList();
   }
@@ -7861,6 +7964,335 @@ function renderZoomLinkSetting() {
   const input = document.getElementById('zoomLinkInput');
   if (input) input.value = getZoomLink();
 }
+
+/* ============================================
+   RABATTCODES / DISCOUNTS
+   ============================================ */
+
+const DEFAULT_LOYALTY_TIERS = [
+  { min_bookings: 3, discount_percent: 5, label: 'Vertraut', active: true },
+  { min_bookings: 5, discount_percent: 10, label: 'Verbunden', active: true },
+  { min_bookings: 10, discount_percent: 15, label: 'Verwurzelt', active: true }
+];
+
+function getDiscountCodes() { return Storage.get('discountCodes', []); }
+function setDiscountCodes(codes) { Storage.set('discountCodes', codes); }
+function getLoyaltyTiers() { return Storage.get('loyaltyTiers', DEFAULT_LOYALTY_TIERS); }
+function setLoyaltyTiers(tiers) { Storage.set('loyaltyTiers', tiers); }
+function getRedemptions() { return Storage.get('discountRedemptions', []); }
+function addRedemption(r) {
+  const all = getRedemptions();
+  all.push({ ...r, redeemed_at: new Date().toISOString() });
+  Storage.set('discountRedemptions', all);
+}
+
+async function loadDiscountsFromCloud() {
+  if (!Cloud.ready) { showToast('Cloud nicht verfügbar — nur lokal.'); return; }
+  try {
+    const codes = await Cloud.list('discount_codes');
+    if (Array.isArray(codes)) setDiscountCodes(codes);
+    const tiers = await Cloud.list('loyalty_tiers');
+    if (Array.isArray(tiers) && tiers.length > 0) setLoyaltyTiers(tiers);
+    renderDiscountsPanel();
+    showToast('Rabatte aus Cloud geladen');
+  } catch (e) {
+    console.error(e);
+    showToast('Cloud-Sync fehlgeschlagen');
+  }
+}
+
+function openNewDiscountForm() {
+  document.getElementById('newDiscountForm').style.display = '';
+  document.getElementById('newDiscTitle').value = '';
+  document.getElementById('newDiscCode').value = '';
+  document.getElementById('newDiscType').value = 'percent';
+  document.getElementById('newDiscValue').value = '';
+  document.getElementById('newDiscApplies').value = 'all';
+  document.getElementById('newDiscFrom').value = '';
+  document.getElementById('newDiscUntil').value = '';
+  document.getElementById('newDiscMaxRedemptions').value = '';
+}
+function closeNewDiscountForm() {
+  document.getElementById('newDiscountForm').style.display = 'none';
+}
+
+async function saveNewDiscount() {
+  const title = document.getElementById('newDiscTitle').value.trim();
+  const code = document.getElementById('newDiscCode').value.trim().toUpperCase();
+  const type = document.getElementById('newDiscType').value;
+  const value = parseFloat(document.getElementById('newDiscValue').value);
+  const applies = document.getElementById('newDiscApplies').value;
+  const from = document.getElementById('newDiscFrom').value || null;
+  const until = document.getElementById('newDiscUntil').value || null;
+  const max = parseInt(document.getElementById('newDiscMaxRedemptions').value);
+
+  if (!title || !code) { showToast('Titel und Code sind Pflicht.'); return; }
+  if (isNaN(value) || value <= 0) { showToast('Bitte gültigen Rabatt-Wert eingeben.'); return; }
+  if (type === 'percent' && value > 100) { showToast('Prozent-Rabatt max. 100%.'); return; }
+
+  const codes = getDiscountCodes();
+  if (codes.some(c => c.code === code)) { showToast('Code existiert bereits.'); return; }
+
+  const newCode = {
+    id: 'dc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    code, title,
+    discount_type: type,
+    discount_value: value,
+    applies_to: applies,
+    valid_from: from,
+    valid_until: until,
+    max_redemptions: isNaN(max) ? null : max,
+    current_redemptions: 0,
+    active: true,
+    created_at: new Date().toISOString()
+  };
+
+  codes.push(newCode);
+  setDiscountCodes(codes);
+
+  if (Cloud.ready) {
+    try {
+      await Cloud.insertOne('discount_codes', {
+        code: newCode.code,
+        title: newCode.title,
+        discount_type: newCode.discount_type,
+        discount_value: newCode.discount_value,
+        applies_to: newCode.applies_to,
+        valid_from: newCode.valid_from,
+        valid_until: newCode.valid_until,
+        max_redemptions: newCode.max_redemptions,
+        active: true
+      });
+    } catch (e) { console.error('Cloud-Insert fehlgeschlagen:', e); }
+  }
+
+  closeNewDiscountForm();
+  renderDiscountsPanel();
+  showToast(`Code „${code}" angelegt`);
+}
+
+async function toggleDiscountActive(id) {
+  const codes = getDiscountCodes();
+  const c = codes.find(x => x.id === id);
+  if (!c) return;
+  c.active = !c.active;
+  setDiscountCodes(codes);
+  if (Cloud.ready && !c.id.startsWith('dc_')) {
+    Cloud.upsertOne('discount_codes', { id: c.id, active: c.active }, 'id').catch(()=>{});
+  }
+  renderDiscountsPanel();
+  showToast(c.active ? 'Code aktiviert' : 'Code deaktiviert');
+}
+
+async function deleteDiscount(id) {
+  const codes = getDiscountCodes();
+  const c = codes.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Code „${c.code}" wirklich löschen?`)) return;
+  setDiscountCodes(codes.filter(x => x.id !== id));
+  if (Cloud.ready && !c.id.startsWith('dc_')) {
+    Cloud.deleteOne('discount_codes', 'id', c.id).catch(()=>{});
+  }
+  renderDiscountsPanel();
+  showToast('Code gelöscht');
+}
+
+function renderDiscountsPanel() {
+  renderDiscountCodesList();
+  renderLoyaltyTiersList();
+  renderDiscountStats();
+}
+
+function renderDiscountCodesList() {
+  const container = document.getElementById('adminDiscountsList');
+  if (!container) return;
+  const codes = getDiscountCodes();
+  if (codes.length === 0) {
+    container.innerHTML = '<p style="font-size:0.9rem; color:var(--text-muted);">Noch keine Rabattcodes angelegt.</p>';
+    return;
+  }
+  container.innerHTML = codes.map(c => {
+    const status = c.active ? 'aktiv' : 'inaktiv';
+    const statusColor = c.active ? '#4f6c7e' : '#999';
+    const valueLabel = c.discount_type === 'percent' ? `${c.discount_value}%` : `CHF ${c.discount_value}`;
+    const validity = [];
+    if (c.valid_from) validity.push(`ab ${c.valid_from}`);
+    if (c.valid_until) validity.push(`bis ${c.valid_until}`);
+    const validityText = validity.length ? validity.join(' ') : 'unbefristet';
+    const usage = c.max_redemptions
+      ? `${c.current_redemptions || 0} / ${c.max_redemptions} eingelöst`
+      : `${c.current_redemptions || 0} Einlösungen`;
+    return `
+      <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:1rem; margin-bottom:0.7rem; background:var(--surface);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+          <div style="flex:1; min-width:200px;">
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+              <code style="font-size:1rem; font-weight:600; padding:0.2rem 0.5rem; background:var(--bg); border-radius:4px;">${escapeHtml(c.code)}</code>
+              <span style="font-weight:500;">${escapeHtml(c.title)}</span>
+              <span style="font-size:0.75rem; color:${statusColor}; text-transform:uppercase; letter-spacing:0.05em;">● ${status}</span>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-soft); margin-top:0.4rem;">
+              <strong>${valueLabel}</strong> Rabatt · ${c.applies_to === 'all' ? 'Alles' : c.applies_to === 'bookings' ? 'Sitzungen' : 'Shop'} · ${validityText} · ${usage}
+            </div>
+          </div>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn-icon-sm" onclick="toggleDiscountActive('${c.id}')" title="${c.active ? 'Deaktivieren' : 'Aktivieren'}">${c.active ? '⏸' : '▶'}</button>
+            <button class="btn-icon-sm" onclick="deleteDiscount('${c.id}')" title="Löschen">×</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLoyaltyTiersList() {
+  const container = document.getElementById('loyaltyTiersList');
+  if (!container) return;
+  const tiers = getLoyaltyTiers().sort((a,b) => a.min_bookings - b.min_bookings);
+  if (tiers.length === 0) {
+    container.innerHTML = '<p style="font-size:0.9rem; color:var(--text-muted);">Keine Stammkundenstufen definiert.</p>';
+    return;
+  }
+  container.innerHTML = tiers.map((t, idx) => `
+    <div style="display:grid; grid-template-columns:auto 1fr auto auto auto; gap:0.8rem; align-items:center; padding:0.6rem; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:0.5rem;">
+      <span style="font-weight:500;">Ab</span>
+      <input type="number" class="form-input" value="${t.min_bookings}" min="1" onchange="updateLoyaltyTier(${idx}, 'min_bookings', this.value)" style="max-width:80px;">
+      <span>Buchungen →</span>
+      <input type="number" class="form-input" value="${t.discount_percent}" min="1" max="100" onchange="updateLoyaltyTier(${idx}, 'discount_percent', this.value)" style="max-width:70px;">
+      <button class="btn-icon-sm" onclick="deleteLoyaltyTier(${idx})" title="Löschen">×</button>
+    </div>
+  `).join('');
+}
+
+function updateLoyaltyTier(idx, field, value) {
+  const tiers = getLoyaltyTiers();
+  if (!tiers[idx]) return;
+  const num = parseFloat(value);
+  if (!isNaN(num) && num > 0) {
+    tiers[idx][field] = num;
+    setLoyaltyTiers(tiers);
+  }
+}
+
+function addLoyaltyTier() {
+  const tiers = getLoyaltyTiers();
+  const max = tiers.reduce((m, t) => Math.max(m, t.min_bookings), 0);
+  tiers.push({ min_bookings: max + 5, discount_percent: 10, label: '', active: true });
+  setLoyaltyTiers(tiers);
+  renderLoyaltyTiersList();
+}
+
+function deleteLoyaltyTier(idx) {
+  const tiers = getLoyaltyTiers();
+  tiers.splice(idx, 1);
+  setLoyaltyTiers(tiers);
+  renderLoyaltyTiersList();
+}
+
+function resetLoyaltyTiers() {
+  if (!confirm('Stammkundenstufen wirklich auf Standard zurücksetzen?')) return;
+  setLoyaltyTiers(JSON.parse(JSON.stringify(DEFAULT_LOYALTY_TIERS)));
+  renderLoyaltyTiersList();
+  showToast('Standard wiederhergestellt');
+}
+
+function renderDiscountStats() {
+  const container = document.getElementById('discountStats');
+  if (!container) return;
+  const reds = getRedemptions();
+  const codes = getDiscountCodes();
+  if (reds.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Noch keine Einlösungen.</p>';
+    return;
+  }
+  const totalSaved = reds.reduce((s, r) => s + (r.discount_amount || 0), 0);
+  const byCode = {};
+  reds.forEach(r => {
+    const c = codes.find(x => x.id === r.discount_code_id);
+    const key = c ? c.code : 'unbekannt';
+    byCode[key] = (byCode[key] || 0) + 1;
+  });
+  container.innerHTML = `
+    <p><strong>${reds.length}</strong> Einlösungen insgesamt</p>
+    <p><strong>CHF ${totalSaved.toFixed(2)}</strong> Rabatt gewährt</p>
+    <p style="margin-top:0.8rem;">Pro Code:</p>
+    <ul style="margin:0.3rem 0 0 1.2rem;">
+      ${Object.entries(byCode).map(([k, v]) => `<li><code>${escapeHtml(k)}</code>: ${v}×</li>`).join('')}
+    </ul>
+  `;
+}
+
+/* === VALIDIERUNG (für Buchungs-Formular) === */
+function validateDiscountCode(codeInput, applicableTo) {
+  const code = (codeInput || '').trim().toUpperCase();
+  if (!code) return { valid: false, reason: 'leer' };
+  const c = getDiscountCodes().find(x => x.code === code && x.active);
+  if (!c) return { valid: false, reason: 'Code unbekannt oder deaktiviert' };
+
+  const today = new Date().toISOString().slice(0, 10);
+  if (c.valid_from && today < c.valid_from) return { valid: false, reason: 'Code ist noch nicht gültig' };
+  if (c.valid_until && today > c.valid_until) return { valid: false, reason: 'Code ist abgelaufen' };
+  if (c.max_redemptions && (c.current_redemptions || 0) >= c.max_redemptions) {
+    return { valid: false, reason: 'Code bereits voll eingelöst' };
+  }
+  if (applicableTo && c.applies_to !== 'all' && c.applies_to !== applicableTo) {
+    return { valid: false, reason: `Code gilt nur für ${c.applies_to === 'bookings' ? 'Sitzungen' : 'Shop'}` };
+  }
+  return { valid: true, code: c };
+}
+
+function applyDiscount(amount, codeObj) {
+  if (codeObj.discount_type === 'percent') {
+    const off = amount * (codeObj.discount_value / 100);
+    return { amount_after: Math.max(0, amount - off), discount_amount: off };
+  } else {
+    const off = Math.min(amount, codeObj.discount_value);
+    return { amount_after: Math.max(0, amount - off), discount_amount: off };
+  }
+}
+
+function getLoyaltyDiscountForEmail(email, totalBookings) {
+  if (!email) return null;
+  // Hier könnten wir Cloud abfragen für echte Buchungen; vereinfacht: nur Stufe matchen
+  const tiers = getLoyaltyTiers().filter(t => t.active).sort((a,b) => b.min_bookings - a.min_bookings);
+  for (const t of tiers) {
+    if (totalBookings >= t.min_bookings) return t;
+  }
+  return null;
+}
+
+/* === BUCHUNGS-FORMULAR HOOKS === */
+window._appliedDiscount = null;
+
+function onDiscountCodeInput() {
+  // Reset wenn Code geändert wird
+  window._appliedDiscount = null;
+  const fb = document.getElementById('discountCodeFeedback');
+  if (fb) fb.innerHTML = '';
+}
+
+function checkDiscountCode() {
+  const input = document.getElementById('bookDiscountCode');
+  const fb = document.getElementById('discountCodeFeedback');
+  if (!input || !fb) return;
+  const code = (input.value || '').trim().toUpperCase();
+  if (!code) {
+    fb.innerHTML = '';
+    window._appliedDiscount = null;
+    return;
+  }
+  const result = validateDiscountCode(code, 'bookings');
+  if (!result.valid) {
+    fb.innerHTML = `<span style="color:#c0392b;">✗ ${escapeHtml(result.reason)}</span>`;
+    window._appliedDiscount = null;
+    return;
+  }
+  const c = result.code;
+  const valueLabel = c.discount_type === 'percent' ? `${c.discount_value}%` : `CHF ${c.discount_value}`;
+  fb.innerHTML = `<span style="color:#4a7c4e;">✓ ${escapeHtml(c.title)} — <strong>${valueLabel}</strong> Rabatt aktiv</span>`;
+  window._appliedDiscount = c;
+}
+
 
 function resetAllContent() {
   if (!confirm('Wirklich alle Inhalte (Stimmen & FAQ) auf die Standardwerte zurücksetzen?')) return;
