@@ -8293,6 +8293,103 @@ function checkDiscountCode() {
   window._appliedDiscount = c;
 }
 
+/**
+ * Berechnet den effektiven Rabatt fürs Buchen.
+ * Reihenfolge: Aktionscode hat Vorrang vor Stammkundenrabatt (exklusiv).
+ * Returns { applied, final_price, discount_amount, source, code, code_id, label }
+ */
+function computeBookingDiscount(originalPrice, appliesTo, email) {
+  if (!originalPrice || originalPrice <= 0) {
+    return { applied: false, final_price: originalPrice, discount_amount: 0 };
+  }
+
+  // 1. Aktionscode prüfen (aus Live-Feld)
+  const codeInput = document.getElementById('bookDiscountCode');
+  const codeText = codeInput ? (codeInput.value || '').trim().toUpperCase() : '';
+  if (codeText) {
+    const result = validateDiscountCode(codeText, appliesTo);
+    if (result.valid) {
+      const applied = applyDiscount(originalPrice, result.code);
+      return {
+        applied: true,
+        final_price: applied.amount_after,
+        discount_amount: applied.discount_amount,
+        source: 'code',
+        code: result.code.code,
+        code_id: result.code.id,
+        label: result.code.title
+      };
+    }
+  }
+
+  // 2. Stammkundenrabatt prüfen (nur wenn eingeloggter Klient mit Buchungs-Historie)
+  // Vereinfacht: wir prüfen anhand der Email wie viele Buchungen bereits existieren.
+  // Cloud-Lookup wäre besser, hier nutzen wir lokale Klient-Daten.
+  if (email) {
+    const clients = getClients ? getClients() : [];
+    const client = clients.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
+    if (client) {
+      const totalBookings = (client.bookings || []).length;
+      const tier = getLoyaltyDiscountForEmail(email, totalBookings);
+      if (tier) {
+        const off = originalPrice * (tier.discount_percent / 100);
+        return {
+          applied: true,
+          final_price: Math.max(0, originalPrice - off),
+          discount_amount: off,
+          source: 'loyalty',
+          code: null,
+          code_id: null,
+          label: tier.label || `${tier.discount_percent}% Stammkundenrabatt`
+        };
+      }
+    }
+  }
+
+  return { applied: false, final_price: originalPrice, discount_amount: 0 };
+}
+
+/**
+ * Registriert eine Code-Einlösung lokal + in der Cloud.
+ * Erhöht auch den current_redemptions-Zähler des Codes.
+ */
+async function registerDiscountRedemption(payload) {
+  // Lokal speichern (Statistik im Admin)
+  addRedemption(payload);
+
+  // Counter im lokalen Code-Objekt hochzählen
+  const codes = getDiscountCodes();
+  const c = codes.find(x => x.id === payload.discount_code_id);
+  if (c) {
+    c.current_redemptions = (c.current_redemptions || 0) + 1;
+    setDiscountCodes(codes);
+  }
+
+  // Cloud-Insert (best-effort)
+  if (Cloud.ready) {
+    try {
+      await Cloud.insertOne('discount_redemptions', {
+        discount_code_id: payload.discount_code_id,
+        booking_id: payload.booking_id || null,
+        client_email: payload.client_email || null,
+        amount_before: payload.amount_before,
+        amount_after: payload.amount_after,
+        discount_amount: payload.discount_amount
+      });
+      // Counter auch in Cloud hochzählen (best-effort)
+      if (c && !c.id.startsWith('dc_')) {
+        await Cloud.upsertOne('discount_codes', {
+          id: c.id,
+          current_redemptions: c.current_redemptions
+        }, 'id');
+      }
+    } catch (e) {
+      console.error('Cloud-Redemption fehlgeschlagen:', e);
+    }
+  }
+}
+
+
 
 function resetAllContent() {
   if (!confirm('Wirklich alle Inhalte (Stimmen & FAQ) auf die Standardwerte zurücksetzen?')) return;
@@ -10903,10 +11000,25 @@ async function submitBooking(e) {
         return;
       }
 
+      // Rabatt berechnen (auf den Pack-Gesamtpreis)
+      const packType = getSessionType('pack4');
+      const discount = computeBookingDiscount(packType.price, 'bookings', email);
+      const customerPayload = { name, email, phone, notes };
+      if (discount.applied) {
+        customerPayload.discount = {
+          code: discount.code || null,
+          source: discount.source,
+          original_price: packType.price,
+          final_price: discount.final_price,
+          discount_amount: discount.discount_amount,
+          label: discount.label
+        };
+      }
+
       // RPC: atomare 4er-Buchung in Supabase
       const result = await Cloud.rpc('create_pack_booking', {
         p_slots: Booking.packSlots,
-        p_customer: { name, email, phone, notes },
+        p_customer: customerPayload,
         p_consent: consent
       });
 
@@ -10928,6 +11040,18 @@ async function submitBooking(e) {
       }));
 
       showPackConfirmation(newBookings);
+
+      // Discount-Redemption registrieren (best-effort)
+      if (discount.applied && discount.code_id && newBookings.length > 0) {
+        registerDiscountRedemption({
+          discount_code_id: discount.code_id,
+          booking_id: newBookings[0].id, // Erste Buchung des Packs
+          client_email: email,
+          amount_before: packType.price,
+          amount_after: discount.final_price,
+          discount_amount: discount.discount_amount
+        });
+      }
 
       // E-Mail-Bestätigung an Klient*in + Admin senden (best-effort, blockt nicht)
       sendBookingEmail(newBookings.map(b => b.id));
@@ -10952,17 +11076,46 @@ async function submitBooking(e) {
       }
 
       const type = getSessionType(Booking.selectedType);
-      const inserted = await Cloud.insertOne('bookings', {
+
+      // Rabatt berechnen
+      const discount = computeBookingDiscount(type.price, 'bookings', email);
+
+      const bookingPayload = {
         date: Booking.selectedDate,
         time: Booking.selectedTime,
         duration: type.duration,
         type: Booking.selectedType,
         type_name: type.name,
-        price: type.price,
+        price: discount.final_price,
         customer: { name, email, phone, notes },
         consent,
         status: 'confirmed'
-      });
+      };
+      // Discount-Infos im Customer-Objekt mitspeichern (zusätzlich)
+      if (discount.applied) {
+        bookingPayload.customer.discount = {
+          code: discount.code || null,
+          source: discount.source,
+          original_price: type.price,
+          final_price: discount.final_price,
+          discount_amount: discount.discount_amount,
+          label: discount.label
+        };
+      }
+
+      const inserted = await Cloud.insertOne('bookings', bookingPayload);
+
+      // Discount-Redemption registrieren (best-effort)
+      if (discount.applied && discount.code_id) {
+        registerDiscountRedemption({
+          discount_code_id: discount.code_id,
+          booking_id: inserted.id,
+          client_email: email,
+          amount_before: type.price,
+          amount_after: discount.final_price,
+          discount_amount: discount.discount_amount
+        });
+      }
 
       const booking = {
         id: inserted.id,
@@ -11013,10 +11166,25 @@ function showConfirmation(booking) {
   const date = parseDateKey(booking.date);
   const formatted = date.toLocaleDateString('de-CH', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
   const detail = document.getElementById('confirmationDetail');
+
+  // Rabatt-Info aus customer.discount falls vorhanden
+  const disc = booking.customer && booking.customer.discount;
+  let priceHtml = '';
+  if (disc && disc.discount_amount > 0) {
+    priceHtml = `
+      <div class="confirm-detail-row" style="opacity:0.7;"><span>Original</span><span>CHF ${disc.original_price.toFixed(2)}</span></div>
+      <div class="confirm-detail-row" style="color:#4a7c4e;"><span>${escapeHtml(disc.label || 'Rabatt')}</span><span>− CHF ${disc.discount_amount.toFixed(2)}</span></div>
+      <div class="confirm-detail-row" style="font-weight:600;"><span>Du zahlst</span><span>CHF ${disc.final_price.toFixed(2)}</span></div>
+    `;
+  } else if (booking.price && booking.price > 0) {
+    priceHtml = `<div class="confirm-detail-row"><span>Preis</span><span>CHF ${booking.price.toFixed(2)}</span></div>`;
+  }
+
   detail.innerHTML = `
     <div class="confirm-detail-row"><span>Sitzung</span><span>${escapeHtml(booking.typeName)}</span></div>
     <div class="confirm-detail-row"><span>Datum</span><span>${formatted}</span></div>
     <div class="confirm-detail-row"><span>Uhrzeit</span><span>${booking.time} (${booking.duration} Min.)</span></div>
+    ${priceHtml}
     <div class="confirm-detail-row"><span>Buchungs-Nr.</span><span style="font-family:monospace; font-size:0.78rem;">${booking.id}</span></div>
   `;
 
@@ -11039,6 +11207,21 @@ function showPackConfirmation(bookings) {
       <span>${formatted} · ${b.time}</span>
     </div>`;
   });
+
+  // Rabatt-Zeile falls vorhanden (am ersten Booking gespeichert)
+  const disc = bookings[0] && bookings[0].customer && bookings[0].customer.discount;
+  if (disc && disc.discount_amount > 0) {
+    html += `<div class="confirm-detail-row" style="margin-top:0.4rem; padding-top:0.6rem; border-top:1px solid var(--border); opacity:0.7;">
+      <span>Original</span><span>CHF ${disc.original_price.toFixed(2)}</span>
+    </div>`;
+    html += `<div class="confirm-detail-row" style="color:#4a7c4e;">
+      <span>${escapeHtml(disc.label || 'Rabatt')}</span><span>− CHF ${disc.discount_amount.toFixed(2)}</span>
+    </div>`;
+    html += `<div class="confirm-detail-row" style="font-weight:600;">
+      <span>Du zahlst</span><span>CHF ${disc.final_price.toFixed(2)}</span>
+    </div>`;
+  }
+
   html += `<div class="confirm-detail-row" style="margin-top:0.4rem; padding-top:0.6rem; border-top:1px solid var(--border);">
     <span>Pack-Nr.</span>
     <span style="font-family:monospace; font-size:0.78rem;">${bookings[0].packId}</span>
