@@ -4643,32 +4643,41 @@ body.edit-mode-active [data-edit] {
   cursor: text;
   border-radius: 4px;
   transition: box-shadow 0.2s ease, background 0.2s ease;
-  outline: 1px dashed rgba(110, 138, 156, 0.4);
+  outline: 1px dashed rgba(110, 138, 156, 0.6);
   outline-offset: 4px;
+  background: rgba(110, 138, 156, 0.06);
+  -webkit-tap-highlight-color: rgba(110, 138, 156, 0.3);
 }
 body.edit-mode-active [data-edit]:hover {
-  background: rgba(110, 138, 156, 0.08);
+  background: rgba(110, 138, 156, 0.12);
   outline: 1px dashed var(--primary);
 }
 body.edit-mode-active [data-edit]:focus {
   outline: 2px solid var(--primary);
-  background: rgba(110, 138, 156, 0.05);
+  background: rgba(110, 138, 156, 0.08);
   box-shadow: 0 0 0 4px rgba(110, 138, 156, 0.15);
 }
 
 /* Spezial: Edit-Marker auf dunklen Hintergründen (Parallax-Quotes) sichtbarer */
 body.edit-mode-active .parallax-quote [data-edit] {
-  outline: 1px dashed rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.06);
+  outline: 1px dashed rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.10);
 }
 body.edit-mode-active .parallax-quote [data-edit]:hover {
   outline: 2px dashed rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.16);
 }
 body.edit-mode-active .parallax-quote [data-edit]:focus {
   outline: 2px solid white;
   background: rgba(0, 0, 0, 0.25);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
+}
+
+/* Mobile: Stift-Badge IMMER sichtbar (nicht erst auf Hover) */
+@media (hover: none) and (pointer: coarse) {
+  body.edit-mode-active [data-edit]::before {
+    opacity: 0.8 !important;
+  }
 }
 
 /* Edit-Marker Badge */
@@ -5070,7 +5079,7 @@ body.edit-mode-active [data-edit].edited::before {
   <div class="container">
     <div class="about-grid">
       <div class="about-image reveal">
-        <div class="about-quote" data-edit="about-quote">„Heilung beginnt dort, wo wir aufhören zu rennen."</div>
+        <div class="about-quote" data-edit="about-quote">„Heilung beginnt dort, wo wir den Blick von aussen nach innen richten."</div>
       </div>
       <div class="about-content reveal">
         <span class="section-eyebrow" data-edit="about-eyebrow">Über mich</span>
