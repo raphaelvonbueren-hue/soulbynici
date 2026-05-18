@@ -4985,6 +4985,14 @@ body.edit-mode-active [data-edit].edited::before {
   .floating-deco { transform: scale(0.6); }
 }
 </style>
+
+<!-- Vercel Analytics (DSG-konform, keine Cookies) -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
+
 </head>
 <body>
 
@@ -6311,7 +6319,17 @@ body.edit-mode-active [data-edit].edited::before {
 
     <!-- SETTINGS -->
     <div class="admin-panel" id="panel-settings">
-      <h4 class="admin-section-label">Admin-Passwort ändern</h4>
+      <h4 class="admin-section-label">Zoom-Link für Sitzungen</h4>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
+        Dein persönlicher Zoom-Raum-Link. Wird automatisch in Buchungs-Bestätigungen und 24h-Erinnerungen eingefügt.
+      </p>
+      <div class="form-group" style="max-width:500px;">
+        <label class="form-label">Zoom-Link</label>
+        <input type="url" class="form-input" id="zoomLinkInput" placeholder="https://zoom.us/j/...">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveZoomLink()">Zoom-Link speichern</button>
+
+      <h4 class="admin-section-label" style="margin-top:2rem;">Admin-Passwort ändern</h4>
       <div class="form-msg" id="adminSettingsMsg"></div>
       <form onsubmit="changeAdminPassword(event)">
         <div class="form-group">
@@ -7769,6 +7787,9 @@ function switchAdminTab(e, panel) {
   if (target === 'images') {
     applyCustomImages();
   }
+  if (target === 'settings') {
+    renderZoomLinkSetting();
+  }
   if (target === 'offers') {
     renderAdminOffersList();
   }
@@ -7815,6 +7836,30 @@ function changeAdminPassword(e) {
   showFormMsg(msg, 'Passwort aktualisiert.', 'success');
   document.getElementById('newAdminPassword').value = '';
   setTimeout(() => { msg.style.display = 'none'; }, 3000);
+}
+
+function getZoomLink() {
+  return Storage.get('zoomLink', '');
+}
+function setZoomLink(link) {
+  Storage.set('zoomLink', link);
+  if (Cloud.ready) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:zoom_link', content: link }, 'text_key').catch(()=>{});
+  }
+}
+function saveZoomLink() {
+  const input = document.getElementById('zoomLinkInput');
+  const link = (input.value || '').trim();
+  if (link && !/^https?:\/\//i.test(link)) {
+    showToast('Bitte gültige URL mit https:// eingeben.');
+    return;
+  }
+  setZoomLink(link);
+  showToast(link ? 'Zoom-Link gespeichert' : 'Zoom-Link entfernt');
+}
+function renderZoomLinkSetting() {
+  const input = document.getElementById('zoomLinkInput');
+  if (input) input.value = getZoomLink();
 }
 
 function resetAllContent() {
