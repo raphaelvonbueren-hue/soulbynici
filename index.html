@@ -2270,10 +2270,19 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
   gap: 1rem;
   padding: 0.6rem 0;
   font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+.contact-list a {
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.contact-list a:hover {
+  color: white;
 }
 .contact-list svg {
   width: 20px; height: 20px;
-  color: var(--secondary);
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 }
 .contact-card {
@@ -5909,6 +5918,24 @@ body.edit-mode-active [data-edit].edited::before {
           <div id="clientBookingsList"></div>
         </div>
       </div>
+
+      <!-- GEBURTSTAG-ERINNERUNG -->
+      <div id="birthdaySettings" class="admin-add-form" style="margin-top:3rem;">
+        <h4 class="admin-section-label">🎂 Geburtstag-Erinnerungen</h4>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
+          Täglich um 08:00 prüft das System, ob jemand Geburtstag hat. Je nach Einstellung erhältst du eine Erinnerung oder Klient*innen bekommen eine kleine Glückwunsch-Mail von dir.
+        </p>
+        <div class="form-group" style="max-width:400px;">
+          <label class="form-label">Modus</label>
+          <select class="form-input" id="birthdayModeInput" onchange="saveBirthdayMode()">
+            <option value="off">Aus (keine Erinnerung)</option>
+            <option value="admin">Nur Erinnerung an mich</option>
+            <option value="client">Glückwunsch-Mail an Klient*in</option>
+            <option value="both">Beides: Erinnerung + Mail</option>
+          </select>
+        </div>
+        <div id="birthdayUpcoming" style="margin-top:1rem;"></div>
+      </div>
     </div>
 
     <!-- SCHEDULE -->
@@ -5941,13 +5968,19 @@ body.edit-mode-active [data-edit].edited::before {
         </div>
       </div>
 
-      <h4 class="admin-section-label" style="margin-top:2rem;">4er-Paket: Mindestabstand</h4>
+      <h4 class="admin-section-label" style="margin-top:2rem;">4er-Paket: Mindest- und Maximum-Abstand</h4>
       <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-        Wieviele Tage müssen mindestens zwischen zwei Terminen eines Pakets liegen? Standard: 7 (eine Woche). Bei 14 buchen Klient*innen im 2-Wochen-Rhythmus.
+        Wieviele Tage müssen mindestens / höchstens zwischen zwei Terminen eines Pakets liegen? Standard: min. 7 Tage, max. 60 Tage. So bleiben die Termine in einem sinnvollen Rhythmus.
       </p>
-      <div class="form-group" style="max-width:240px;">
-        <label class="form-label">Tage zwischen Pack-Terminen</label>
-        <input type="number" class="form-input" id="packGapInput" min="1" max="60">
+      <div class="form-row" style="max-width:520px;">
+        <div class="form-group">
+          <label class="form-label">Min. Tage zwischen Pack-Terminen</label>
+          <input type="number" class="form-input" id="packGapInput" min="1" max="60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max. Tage zwischen Pack-Terminen</label>
+          <input type="number" class="form-input" id="packMaxGapInput" min="1" max="365">
+        </div>
       </div>
 
       <div class="admin-actions">
@@ -7718,6 +7751,7 @@ function switchAdminTab(e, panel) {
     document.getElementById('clientsListView').style.display = '';
     document.getElementById('clientDetailView').style.display = 'none';
     renderClientsList();
+    renderBirthdaySettings();
   }
   if (target === 'themes') { renderThemePresets(); syncColorInputs(); }
   if (target === 'testimonials') renderAdminTestimonialList();
@@ -9769,7 +9803,8 @@ const DEFAULT_AVAILABILITY = {
   blockedDates: [],
   bookingWindow: 56,    // Tage im Voraus
   minNotice: 24,        // Stunden Vorlauf für einzelne Buchung
-  packMinGapDays: 7     // Mindestabstand zwischen Terminen im 4er-Paket (in Tagen)
+  packMinGapDays: 7,    // Mindestabstand zwischen Terminen im 4er-Paket (in Tagen)
+  packMaxGapDays: 60    // Maximumabstand zwischen Terminen im 4er-Paket (in Tagen)
 };
 
 const WEEKDAY_NAMES = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
@@ -9877,7 +9912,8 @@ function getEffectiveSlotsForDate(dateKeyStr) {
   if (Booking.selectedType !== 'pack4') return slots;
 
   const av = getAvailability();
-  const gapDays = av.packMinGapDays || 7;
+  const minGap = av.packMinGapDays || 7;
+  const maxGap = av.packMaxGapDays || 60;
   const currentIdx = Booking.packStep - 1;
 
   // Bereits andere Pack-Slots am selben Tag rausfiltern (Belt & Braces)
@@ -9886,7 +9922,7 @@ function getEffectiveSlotsForDate(dateKeyStr) {
     .map(s => s.time);
   slots = slots.filter(t => !reserved.includes(t));
 
-  // Chronologie + Mindestabstand prüfen
+  // Chronologie + Mindest- + Maximumabstand prüfen
   const { prevSlot, nextSlot } = getPackBoundsForCurrentStep();
   const check = parseDateKey(dateKeyStr);
   check.setHours(0, 0, 0, 0);
@@ -9895,15 +9931,27 @@ function getEffectiveSlotsForDate(dateKeyStr) {
   if (prevSlot) {
     const minDate = parseDateKey(prevSlot.date);
     minDate.setHours(0, 0, 0, 0);
-    minDate.setDate(minDate.getDate() + gapDays);
-    if (checkTime < minDate.getTime()) return [];
+    const minBoundary = new Date(minDate.getTime());
+    minBoundary.setDate(minBoundary.getDate() + minGap);
+    if (checkTime < minBoundary.getTime()) return [];
+
+    // Max-Abstand prüfen (nicht weiter als maxGap nach prevSlot)
+    const maxBoundary = new Date(minDate.getTime());
+    maxBoundary.setDate(maxBoundary.getDate() + maxGap);
+    if (checkTime > maxBoundary.getTime()) return [];
   }
 
   if (nextSlot) {
-    const maxDate = parseDateKey(nextSlot.date);
-    maxDate.setHours(0, 0, 0, 0);
-    maxDate.setDate(maxDate.getDate() - gapDays);
+    const nextDate = parseDateKey(nextSlot.date);
+    nextDate.setHours(0, 0, 0, 0);
+    const maxDate = new Date(nextDate.getTime());
+    maxDate.setDate(maxDate.getDate() - minGap);
     if (checkTime > maxDate.getTime()) return [];
+
+    // Max-Abstand prüfen (nicht weiter als maxGap vor nextSlot)
+    const minBoundary = new Date(nextDate.getTime());
+    minBoundary.setDate(minBoundary.getDate() - maxGap);
+    if (checkTime < minBoundary.getTime()) return [];
   }
 
   return slots;
@@ -10045,7 +10093,8 @@ function renderPackProgress() {
       hintEl.classList.remove('visible');
     } else {
       const av = getAvailability();
-      const gapDays = av.packMinGapDays || 7;
+      const minGap = av.packMinGapDays || 7;
+      const maxGap = av.packMaxGapDays || 60;
       const { prevSlot, nextSlot } = getPackBoundsForCurrentStep();
       const prevIdx = Booking.packSlots.findIndex(s => s === prevSlot) + 1;
       const nextIdx = Booking.packSlots.findIndex(s => s === nextSlot) + 1;
@@ -10054,20 +10103,26 @@ function renderPackProgress() {
 
       if (prevSlot) {
         const minDate = parseDateKey(prevSlot.date);
-        minDate.setDate(minDate.getDate() + gapDays);
-        parts.push(`frühestens <strong>${fmt(minDate)}</strong> (${gapDays}&nbsp;Tage nach Termin&nbsp;${prevIdx})`);
+        const minBoundary = new Date(minDate.getTime());
+        minBoundary.setDate(minBoundary.getDate() + minGap);
+        const maxBoundary = new Date(minDate.getTime());
+        maxBoundary.setDate(maxBoundary.getDate() + maxGap);
+        parts.push(`zwischen <strong>${fmt(minBoundary)}</strong> und <strong>${fmt(maxBoundary)}</strong> (nach Termin&nbsp;${prevIdx})`);
       }
       if (nextSlot) {
-        const maxDate = parseDateKey(nextSlot.date);
-        maxDate.setDate(maxDate.getDate() - gapDays);
-        parts.push(`spätestens <strong>${fmt(maxDate)}</strong> (${gapDays}&nbsp;Tage vor Termin&nbsp;${nextIdx})`);
+        const nextDate = parseDateKey(nextSlot.date);
+        const maxDate = new Date(nextDate.getTime());
+        maxDate.setDate(maxDate.getDate() - minGap);
+        const minDate2 = new Date(nextDate.getTime());
+        minDate2.setDate(minDate2.getDate() - maxGap);
+        parts.push(`zwischen <strong>${fmt(minDate2)}</strong> und <strong>${fmt(maxDate)}</strong> (vor Termin&nbsp;${nextIdx})`);
       }
 
       if (parts.length > 0) {
         hintEl.innerHTML = `Termin&nbsp;${Booking.packStep}: ${parts.join(' · ')}`;
         hintEl.classList.add('visible');
       } else {
-        hintEl.innerHTML = `<span style="opacity:0.85;">Mindestabstand zwischen den Terminen: <strong>${gapDays}&nbsp;Tage</strong></span>`;
+        hintEl.innerHTML = `<span style="opacity:0.85;">Abstand zwischen den Terminen: <strong>${minGap}–${maxGap}&nbsp;Tage</strong></span>`;
         hintEl.classList.add('visible');
       }
     }
@@ -10569,6 +10624,8 @@ function renderScheduleEditor() {
   document.getElementById('bookingWindowInput').value = av.bookingWindow;
   document.getElementById('minNoticeInput').value = av.minNotice;
   document.getElementById('packGapInput').value = av.packMinGapDays || 7;
+  const maxGapEl = document.getElementById('packMaxGapInput');
+  if (maxGapEl) maxGapEl.value = av.packMaxGapDays || 60;
 }
 
 function toggleDayOpen(day) {
@@ -10629,9 +10686,18 @@ function saveSchedule() {
   const win = parseInt(document.getElementById('bookingWindowInput').value);
   const notice = parseInt(document.getElementById('minNoticeInput').value);
   const gap = parseInt(document.getElementById('packGapInput').value);
+  const maxGapEl = document.getElementById('packMaxGapInput');
+  const maxGap = maxGapEl ? parseInt(maxGapEl.value) : NaN;
   if (!isNaN(win) && win >= 7) av.bookingWindow = win;
   if (!isNaN(notice) && notice >= 0) av.minNotice = notice;
   if (!isNaN(gap) && gap >= 1) av.packMinGapDays = gap;
+  if (!isNaN(maxGap) && maxGap >= 1) {
+    if (!isNaN(gap) && maxGap < gap) {
+      showToast('Maximum-Abstand muss grösser/gleich Mindestabstand sein.');
+      return;
+    }
+    av.packMaxGapDays = maxGap;
+  }
   setAvailability(av);
   showToast('Verfügbarkeit gespeichert');
   renderCalendar();
@@ -10646,6 +10712,67 @@ function resetSchedule() {
   renderCalendar();
   renderSlots();
   showToast('Verfügbarkeit zurückgesetzt');
+}
+
+/* ============================================
+   GEBURTSTAGE
+   ============================================ */
+function getBirthdayMode() {
+  return Storage.get('birthdayMode', 'admin');
+}
+function setBirthdayMode(mode) {
+  Storage.set('birthdayMode', mode);
+  // Auch in Cloud speichern (Edge Function liest daraus)
+  if (Cloud.ready) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:birthday_mode', content: mode }, 'text_key').catch(()=>{});
+  }
+}
+function saveBirthdayMode() {
+  const sel = document.getElementById('birthdayModeInput');
+  if (!sel) return;
+  setBirthdayMode(sel.value);
+  showToast('Geburtstag-Einstellung gespeichert');
+  renderBirthdayUpcoming();
+}
+function renderBirthdaySettings() {
+  const sel = document.getElementById('birthdayModeInput');
+  if (sel) sel.value = getBirthdayMode();
+  renderBirthdayUpcoming();
+}
+function renderBirthdayUpcoming() {
+  const container = document.getElementById('birthdayUpcoming');
+  if (!container) return;
+  const clients = getClients().filter(c => c.birthday);
+  if (clients.length === 0) {
+    container.innerHTML = '<p style="font-size:0.85rem;color:var(--text-muted);">Noch keine Klient*innen mit Geburtsdatum erfasst.</p>';
+    return;
+  }
+  // Sortiere nach Tagen bis zum nächsten Geburtstag
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const upcoming = clients.map(c => {
+    const b = new Date(c.birthday);
+    let next = new Date(today.getFullYear(), b.getMonth(), b.getDate());
+    if (next < today) next = new Date(today.getFullYear() + 1, b.getMonth(), b.getDate());
+    const daysUntil = Math.round((next - today) / (1000 * 60 * 60 * 24));
+    const age = next.getFullYear() - b.getFullYear();
+    return { client: c, next, daysUntil, age };
+  }).sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5);
+
+  const fmt = d => d.toLocaleDateString('de-CH', { day: '2-digit', month: 'short' });
+  const rows = upcoming.map(u => {
+    const labelDays = u.daysUntil === 0 ? '<strong style="color:var(--accent);">heute!</strong>' :
+                      u.daysUntil === 1 ? 'morgen' :
+                      `in ${u.daysUntil} Tagen`;
+    return `<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.9rem;">
+      <span><strong>${escapeHtml(u.client.name)}</strong>${u.client.email ? ` <span style="color:var(--text-muted);">&lt;${escapeHtml(u.client.email)}&gt;</span>` : ''}</span>
+      <span style="color:var(--text-soft);">${fmt(u.next)} · ${labelDays} · wird ${u.age}</span>
+    </div>`;
+  }).join('');
+  container.innerHTML = `
+    <h5 style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">Nächste Geburtstage</h5>
+    ${rows}
+  `;
 }
 
 /* ============================================
