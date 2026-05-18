@@ -938,7 +938,14 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
 }
 .offer-icon svg { width: 24px; height: 24px; stroke: var(--text); fill: none; stroke-width: 1.5; }
 .offer-card.featured .offer-icon svg { stroke: white; }
-.offer-card h3 { margin-bottom: 0.6rem; position: relative; z-index: 1; }
+.offer-card h3 {
+  margin-bottom: 0.6rem;
+  position: relative;
+  z-index: 1;
+  word-spacing: 0.1em;
+  hyphens: none;
+  text-wrap: balance;
+}
 .offer-desc {
   font-size: 0.95rem;
   line-height: 1.65;
@@ -5079,7 +5086,7 @@ body.edit-mode-active [data-edit].edited::before {
   <div class="container">
     <div class="about-grid">
       <div class="about-image reveal">
-        <div class="about-quote" data-edit="about-quote">„Heilung beginnt dort, wo wir den Blick von aussen nach innen richten."</div>
+        <div class="about-quote" data-edit="about-quote">„Heilung beginnt dort, wo wir den Blick von aussen nach innen richten.“</div>
       </div>
       <div class="about-content reveal">
         <span class="section-eyebrow" data-edit="about-eyebrow">Über mich</span>
@@ -9020,11 +9027,11 @@ const DEFAULT_SESSION_TYPES = [
     featured: false
   },
   {
-    id: 'pack4', name: '4er-Paket',
-    duration: 90, price: 640, priceLabel: 'CHF 640', priceSubtext: 'statt 720',
-    description: '4 × 90 Min. · sparst CHF 80',
-    tagline: 'Ein vertiefender Prozess über vier Sitzungen – für nachhaltige Veränderung und tiefe Wandlung.',
-    features: ['4 × 90 Minuten Sitzungen', 'Alle 4 Termine direkt buchen', 'Begleitung zwischen den Sitzungen', 'Sparen gegenüber Einzelpreis'],
+    id: 'pack4', name: 'Energiearbeit (4er‑Paket)',
+    duration: 75, price: 609, priceLabel: 'CHF 609', priceSubtext: 'statt 720',
+    description: '4 × 75 Min. · spare CHF 111',
+    tagline: 'Wenn du bereit bist, deine Themen nicht nur anzuschauen, sondern sie langfristig zu lösen, bietet dir das 4er-Paket den passenden Rahmen für echte, nachhaltige Veränderung. Beschreibung siehe Einzelsession.',
+    features: ['4 × 75 Minuten Sitzungen', 'Alle 4 Termine direkt buchen', 'Begleitung zwischen den Sitzungen', 'Sparen gegenüber Einzelpreis'],
     ctaLabel: '4 Termine buchen',
     featured: true,
     badge: 'Beliebt'
