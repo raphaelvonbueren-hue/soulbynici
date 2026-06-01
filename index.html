@@ -5025,15 +5025,15 @@ body.edit-mode-active [data-edit].edited::before {
       <span class="brand-text">soulbynici</span>
     </div>
     <ul class="nav-links" id="navLinks">
-      <li><a onclick="scrollToSection('home')">Start</a></li>
-      <li><a onclick="scrollToSection('about')">Über mich</a></li>
-      <li><a onclick="scrollToSection('process')">Ablauf</a></li>
-      <li><a onclick="scrollToSection('offers')">Angebote</a></li>
-      <li><a onclick="scrollToSection('booking')">Buchung</a></li>
-      <li><a onclick="scrollToSection('shop')">Mitgliederbereich</a></li>
-      <li><a onclick="scrollToSection('faq')">FAQ</a></li>
-      <li><a onclick="scrollToSection('business')">Business</a></li>
-      <li><a onclick="scrollToSection('contact')">Kontakt</a></li>
+      <li data-nav-id="home"><a onclick="scrollToSection('home')">Start</a></li>
+      <li data-nav-id="about"><a onclick="scrollToSection('about')">Über mich</a></li>
+      <li data-nav-id="process"><a onclick="scrollToSection('process')">Ablauf</a></li>
+      <li data-nav-id="offers"><a onclick="scrollToSection('offers')">Angebote</a></li>
+      <li data-nav-id="booking"><a onclick="scrollToSection('booking')">Buchung</a></li>
+      <li data-nav-id="shop"><a onclick="scrollToSection('shop')">Mitgliederbereich</a></li>
+      <li data-nav-id="faq"><a onclick="scrollToSection('faq')">FAQ</a></li>
+      <li data-nav-id="business"><a onclick="scrollToSection('business')">Business</a></li>
+      <li data-nav-id="contact"><a onclick="scrollToSection('contact')">Kontakt</a></li>
     </ul>
     <div class="nav-actions">
       <button class="btn-icon" id="userBtn" title="Admin-Bereich" onclick="openUserArea()">
@@ -5593,11 +5593,11 @@ body.edit-mode-active [data-edit].edited::before {
   </div>
   <p>Energiearbeit · Heilung · Selbstverbindung</p>
   <div class="footer-links">
-    <a onclick="scrollToSection('about')">Über mich</a>
-    <a onclick="scrollToSection('offers')">Angebote</a>
-    <a onclick="scrollToSection('booking')">Buchung</a>
-    <a onclick="scrollToSection('faq')">FAQ</a>
-    <a onclick="scrollToSection('business')">Business</a>
+    <a data-nav-id="about" onclick="scrollToSection('about')">Über mich</a>
+    <a data-nav-id="offers" onclick="scrollToSection('offers')">Angebote</a>
+    <a data-nav-id="booking" onclick="scrollToSection('booking')">Buchung</a>
+    <a data-nav-id="faq" onclick="scrollToSection('faq')">FAQ</a>
+    <a data-nav-id="business" onclick="scrollToSection('business')">Business</a>
     <a href="https://www.instagram.com/soulbynici" target="_blank" rel="noopener">Instagram</a>
   </div>
   <div class="footer-legal">
@@ -6419,7 +6419,13 @@ body.edit-mode-active [data-edit].edited::before {
 
     <!-- SETTINGS -->
     <div class="admin-panel" id="panel-settings">
-      <h4 class="admin-section-label">Zoom-Link für Sitzungen</h4>
+      <h4 class="admin-section-label">Menüpunkte ein-/ausblenden</h4>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
+        Wähle welche Sektionen aktuell auf der Webseite sichtbar sind. Ausgeblendete Sektionen verschwinden komplett (im Menü, Footer und auf der Seite). Du kannst sie jederzeit wieder einblenden.
+      </p>
+      <div id="navVisibilityList" style="margin-bottom:2rem;"></div>
+
+      <h4 class="admin-section-label" style="margin-top:2rem;">Zoom-Link für Sitzungen</h4>
       <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; line-height:1.6;">
         Dein persönlicher Zoom-Raum-Link. Wird automatisch in Buchungs-Bestätigungen und 24h-Erinnerungen eingefügt.
       </p>
@@ -6823,6 +6829,25 @@ const Cloud = {
           }
         } catch(e) { console.error('processSteps-Config parse error', e); }
       }
+
+      // Menü-Sichtbarkeit aus Config-Key
+      const navKey = textsObj['config:hidden_nav_items'];
+      if (navKey) {
+        try {
+          const parsed = JSON.parse(navKey);
+          if (Array.isArray(parsed)) {
+            Storage.set('hiddenNavItems', parsed);
+          }
+        } catch(e) { console.error('hidden_nav_items parse error', e); }
+      }
+
+      // Zoom-Link aus Config-Key
+      const zoomKey = textsObj['config:zoom_link'];
+      if (zoomKey) Storage.set('zoomLink', zoomKey);
+
+      // Birthday-Mode aus Config-Key
+      const birthdayKey = textsObj['config:birthday_mode'];
+      if (birthdayKey) Storage.set('birthdayMode', birthdayKey);
 
       if (settings[0]) {
         if (settings[0].availability) {
@@ -7963,6 +7988,75 @@ function saveZoomLink() {
 function renderZoomLinkSetting() {
   const input = document.getElementById('zoomLinkInput');
   if (input) input.value = getZoomLink();
+  renderNavVisibility();
+}
+
+/* ============================================
+   MENÜ-SICHTBARKEIT
+   ============================================ */
+const NAV_ITEMS = [
+  { id: 'home', label: 'Start', alwaysOn: true },
+  { id: 'about', label: 'Über mich' },
+  { id: 'process', label: 'Ablauf' },
+  { id: 'offers', label: 'Angebote' },
+  { id: 'booking', label: 'Buchung' },
+  { id: 'shop', label: 'Mitgliederbereich' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'business', label: 'Business' },
+  { id: 'contact', label: 'Kontakt' }
+];
+
+function getHiddenNavItems() { return Storage.get('hiddenNavItems', []); }
+function setHiddenNavItems(arr) {
+  Storage.set('hiddenNavItems', arr);
+  if (Cloud.ready) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:hidden_nav_items', content: JSON.stringify(arr) }, 'text_key').catch(()=>{});
+  }
+  applyNavVisibility();
+}
+
+function toggleNavItem(id) {
+  const hidden = getHiddenNavItems();
+  const idx = hidden.indexOf(id);
+  if (idx >= 0) hidden.splice(idx, 1);
+  else hidden.push(id);
+  setHiddenNavItems(hidden);
+  renderNavVisibility();
+}
+
+function applyNavVisibility() {
+  const hidden = getHiddenNavItems();
+  // Nav-Items
+  document.querySelectorAll('[data-nav-id]').forEach(el => {
+    const id = el.getAttribute('data-nav-id');
+    el.style.display = hidden.includes(id) ? 'none' : '';
+  });
+  // Sektionen mit gleicher ID ausblenden
+  NAV_ITEMS.forEach(item => {
+    if (item.alwaysOn) return;
+    const section = document.getElementById(item.id);
+    if (section) {
+      section.style.display = hidden.includes(item.id) ? 'none' : '';
+    }
+  });
+}
+
+function renderNavVisibility() {
+  const container = document.getElementById('navVisibilityList');
+  if (!container) return;
+  const hidden = getHiddenNavItems();
+  container.innerHTML = NAV_ITEMS.map(item => {
+    const isHidden = hidden.includes(item.id);
+    const disabled = item.alwaysOn ? 'disabled' : '';
+    const title = item.alwaysOn ? 'Start ist immer sichtbar' : '';
+    return `
+      <label style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0.8rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem; cursor:${item.alwaysOn ? 'not-allowed' : 'pointer'}; opacity:${item.alwaysOn ? '0.6' : '1'};" title="${title}">
+        <input type="checkbox" ${isHidden ? '' : 'checked'} ${disabled} onchange="toggleNavItem('${item.id}')">
+        <span style="flex:1;">${escapeHtml(item.label)}</span>
+        <span style="font-size:0.8rem; color:${isHidden ? '#c0392b' : '#4a7c4e'};">${isHidden ? 'ausgeblendet' : 'sichtbar'}</span>
+      </label>
+    `;
+  }).join('');
 }
 
 /* ============================================
@@ -11736,6 +11830,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCalendar();
   renderSlots();
   applyCustomTexts();
+  applyNavVisibility();
   observeReveals();
   showCookieBanner();
 
@@ -11757,6 +11852,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderOfferCardsFromConfig();
     renderProcessSteps();
     applyCustomTexts();
+    applyNavVisibility();
     renderCalendar();
     renderSlots();
 
