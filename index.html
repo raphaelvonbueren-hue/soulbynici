@@ -1485,6 +1485,53 @@ body.edit-mode-active .process-step-add { display: flex; gap: 1rem; align-items:
   flex-wrap: wrap;
 }
 
+/* Payment-Auswahl */
+.payment-choice {
+  margin-top: 1.2rem;
+}
+.payment-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.payment-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--surface);
+}
+.payment-option:hover { border-color: var(--secondary); }
+.payment-option:has(input:checked) {
+  border-color: var(--primary);
+  background: rgba(110, 138, 156, 0.05);
+}
+.payment-option input[type="radio"] {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+.payment-option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.payment-option-content strong {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.payment-option-content span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+@media (max-width: 600px) {
+  .payment-options { grid-template-columns: 1fr; }
+}
+
 /* Wichtige Hinweise & Pflicht-Checkboxen */
 .booking-terms {
   background: var(--bg-alt);
@@ -2362,6 +2409,35 @@ footer .brand {
 }
 .modal-overlay.active .modal { transform: translateY(0); }
 .modal-large { max-width: 680px; }
+
+/* Produkt-Detail im Kauf-Modal */
+.product-detail-header { margin-bottom: 1rem; }
+.product-detail-tagline {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+}
+.product-detail-desc {
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+  color: var(--text-soft);
+}
+.product-detail-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-alt);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+.product-detail-price strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--primary);
+}
+.product-detail-price small { color: var(--text-muted); font-size: 0.85rem; }
 .modal-xlarge {
   max-width: 1100px;
   padding: 2.5rem 3rem;
@@ -5325,8 +5401,29 @@ body.edit-mode-active [data-edit].edited::before {
             </label>
           </div>
 
+          <!-- Zahlungs-Auswahl -->
+          <div class="form-group payment-choice" id="paymentChoiceWrap">
+            <label class="form-label">Bezahlung</label>
+            <div class="payment-options">
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="later" checked>
+                <div class="payment-option-content">
+                  <strong>Bei der Sitzung</strong>
+                  <span>Bar oder Twint vor Ort</span>
+                </div>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="now">
+                <div class="payment-option-content">
+                  <strong>Jetzt online bezahlen</strong>
+                  <span>Karte oder Twint via Stripe</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div class="booking-form-actions">
-            <button type="submit" class="btn btn-primary">Termin verbindlich buchen</button>
+            <button type="submit" class="btn btn-primary" id="bookingSubmitBtn">Termin verbindlich buchen</button>
             <button type="button" class="btn btn-ghost btn-sm" onclick="cancelBookingFlow()">Zurück</button>
           </div>
         </form>
@@ -6475,6 +6572,14 @@ body.edit-mode-active [data-edit].edited::before {
   </div>
 </div>
 
+<!-- PRODUCT DETAIL MODAL -->
+<div class="modal-overlay" id="productDetailModal">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('productDetailModal')">×</button>
+    <div id="productDetailBody"></div>
+  </div>
+</div>
+
 <!-- IMPRESSUM MODAL -->
 <div class="modal-overlay" id="impressumModal">
   <div class="modal modal-large">
@@ -6892,6 +6997,48 @@ function sendBookingEmail(bookingIds) {
     .catch(err => {
       console.warn('[sendBookingEmail] Fehler (Buchung wurde trotzdem gespeichert)', err);
     });
+}
+
+/* ============================================
+   STRIPE CHECKOUT
+   ============================================ */
+async function redirectToStripeCheckout(payload) {
+  if (!Cloud.ready) {
+    showToast('Online-Zahlung aktuell nicht verfügbar. Du kannst direkt vor Ort zahlen.');
+    return;
+  }
+  try {
+    showToast('Du wirst zu Stripe weitergeleitet...');
+    const base = window.location.origin + window.location.pathname;
+    const result = await Cloud.invokeFunction('stripe-create-checkout', {
+      ...payload,
+      success_url: base + '?paid=1',
+      cancel_url: base + '?paid=0'
+    });
+    if (result && result.url) {
+      window.location.href = result.url;
+    } else {
+      throw new Error(result?.error || 'Kein Checkout-URL erhalten');
+    }
+  } catch (e) {
+    console.error('[redirectToStripeCheckout]', e);
+    showToast('Stripe-Checkout konnte nicht gestartet werden. Du kannst vor Ort zahlen.');
+  }
+}
+
+function checkStripeReturnUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const paid = params.get('paid');
+  if (paid === '1') {
+    showToast('✓ Zahlung erfolgreich! Du erhältst eine Bestätigung per E-Mail.');
+    // URL säubern damit beim Reload nichts mehr zeigt
+    const clean = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', clean);
+  } else if (paid === '0') {
+    showToast('Zahlung abgebrochen. Du kannst jederzeit später bezahlen.');
+    const clean = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', clean);
+  }
 }
 
 /* ============================================
@@ -9856,9 +10003,140 @@ function renderShopProducts() {
 function openProductDetail(slug) {
   const product = getProducts().find(p => p.slug === slug);
   if (!product) return;
-  // Phase 1: Einfacher Alert mit Hinweis. Phase 2 wird's ein Modal mit Stripe-Checkout.
-  showToast('Produkt-Detail & Kauf folgt — Stripe-Integration in Phase 2');
-  console.log('[openProductDetail]', product);
+
+  const modal = document.getElementById('productDetailModal');
+  const body = document.getElementById('productDetailBody');
+  if (!modal || !body) {
+    showToast('Produkt-Detail-Modal nicht gefunden');
+    return;
+  }
+
+  const priceLine = product.priceLabel || (product.price > 0 ? `CHF ${product.price.toFixed(0)}` : 'kostenlos');
+  const priceSub = product.priceSubtext || '';
+
+  body.innerHTML = `
+    <div class="product-detail-header">
+      <h2>${escapeHtml(product.name)}</h2>
+      ${product.tagline ? `<p class="product-detail-tagline">${escapeHtml(product.tagline)}</p>` : ''}
+    </div>
+    ${product.description ? `<p class="product-detail-desc">${escapeHtml(product.description)}</p>` : ''}
+    <div class="product-detail-price">
+      <strong>${escapeHtml(priceLine)}</strong>
+      ${priceSub ? `<small>${escapeHtml(priceSub)}</small>` : ''}
+    </div>
+    <form id="productPurchaseForm" onsubmit="purchaseProduct(event, '${escapeHtml(slug)}')">
+      <div class="form-group">
+        <label class="form-label">Vor- und Nachname *</label>
+        <input type="text" class="form-input" id="purchaseName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-Mail *</label>
+        <input type="email" class="form-input" id="purchaseEmail" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rabattcode (optional)</label>
+        <input type="text" class="form-input" id="purchaseDiscountCode" style="text-transform:uppercase;">
+      </div>
+      <div class="booking-checkbox-wrap">
+        <label class="booking-checkbox">
+          <input type="checkbox" required>
+          <span class="booking-checkbox-text">
+            Ich habe die <a onclick="event.preventDefault(); openModal('datenschutzModal')">Datenschutzerklärung</a> gelesen und stimme zu.
+          </span>
+        </label>
+      </div>
+      <div class="booking-form-actions" style="margin-top:1.5rem;">
+        <button type="submit" class="btn btn-primary">Jetzt kaufen · ${escapeHtml(priceLine)}</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('productDetailModal')">Abbrechen</button>
+      </div>
+    </form>
+  `;
+  openModal('productDetailModal');
+}
+
+async function purchaseProduct(e, slug) {
+  e.preventDefault();
+  const product = getProducts().find(p => p.slug === slug);
+  if (!product) return;
+
+  const name = document.getElementById('purchaseName').value.trim();
+  const email = document.getElementById('purchaseEmail').value.trim();
+  const code = (document.getElementById('purchaseDiscountCode').value || '').trim().toUpperCase();
+
+  if (!name || !email) {
+    showToast('Bitte Name und E-Mail ausfüllen');
+    return;
+  }
+
+  if (!Cloud.ready) {
+    showToast('Online-Kauf aktuell nicht verfügbar. Bitte später erneut versuchen.');
+    return;
+  }
+
+  // Rabatt berechnen
+  let originalAmount = product.price || 0;
+  let finalAmount = originalAmount;
+  let discountAmount = 0;
+  let appliedCode = null;
+
+  if (code && originalAmount > 0) {
+    const result = validateDiscountCode(code, 'shop');
+    if (result.valid) {
+      const r = applyDiscount(originalAmount, result.code);
+      finalAmount = r.amount_after;
+      discountAmount = r.discount_amount;
+      appliedCode = result.code;
+    } else {
+      showToast(`Code: ${result.reason}`);
+      return;
+    }
+  }
+
+  if (finalAmount <= 0) {
+    showToast('Kostenlose Produkte werden bald per E-Mail zugestellt — Feature in Arbeit.');
+    return;
+  }
+
+  try {
+    // Order in DB anlegen
+    const order = await Cloud.insertOne('orders', {
+      product_id: product.id || null,
+      product_name: product.name,
+      customer_name: name,
+      customer_email: email,
+      amount: finalAmount,
+      currency: 'CHF',
+      discount_code: appliedCode ? appliedCode.code : null,
+      discount_amount: discountAmount,
+      payment_status: 'pending'
+    });
+
+    closeModal('productDetailModal');
+
+    // Discount-Redemption registrieren falls Code verwendet
+    if (appliedCode) {
+      registerDiscountRedemption({
+        discount_code_id: appliedCode.id,
+        order_id: order.id,
+        client_email: email,
+        amount_before: originalAmount,
+        amount_after: finalAmount,
+        discount_amount: discountAmount
+      });
+    }
+
+    // Stripe-Checkout starten
+    await redirectToStripeCheckout({
+      type: 'order',
+      order_id: order.id,
+      amount: finalAmount,
+      description: product.name,
+      customer_email: email
+    });
+  } catch (e) {
+    console.error('[purchaseProduct]', e);
+    showToast('Kauf konnte nicht gestartet werden. Bitte erneut versuchen.');
+  }
 }
 
 function openMemberArea() {
@@ -11163,6 +11441,18 @@ async function submitBooking(e) {
       renderPackProgress();
       hideBookingForm();
 
+      // Falls "Jetzt zahlen" gewählt: Stripe-Checkout starten (für gesamtes Pack)
+      const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'later';
+      if (paymentMethod === 'now' && discount.final_price > 0) {
+        await redirectToStripeCheckout({
+          type: 'booking',
+          booking_ids: newBookings.map(b => b.id),
+          amount: discount.final_price,
+          description: '4er-Paket Energiearbeit',
+          customer_email: email
+        });
+      }
+
     } else {
       if (!Booking.selectedDate || !Booking.selectedTime) {
         showFormMsg(msg, 'Bitte wähle Datum und Uhrzeit aus.', 'error');
@@ -11239,6 +11529,18 @@ async function submitBooking(e) {
       renderCalendar();
       renderSlots();
       hideBookingForm();
+
+      // Falls "Jetzt zahlen" gewählt: Stripe-Checkout starten
+      const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'later';
+      if (paymentMethod === 'now' && booking.price > 0) {
+        await redirectToStripeCheckout({
+          type: 'booking',
+          booking_ids: [booking.id],
+          amount: booking.price,
+          description: booking.typeName + ' · ' + booking.date + ' ' + booking.time,
+          customer_email: email
+        });
+      }
     }
   } catch (err) {
     console.error('Booking error:', err);
@@ -11833,6 +12135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   applyNavVisibility();
   observeReveals();
   showCookieBanner();
+  checkStripeReturnUrl();
 
   // Maintenance-Check sofort aus Cache
   const cachedSettings = Storage.get('siteSettings', null);
