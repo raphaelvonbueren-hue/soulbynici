@@ -2410,6 +2410,13 @@ footer .brand {
 .modal-overlay.active .modal { transform: translateY(0); }
 .modal-large { max-width: 680px; }
 
+/* Active-Filter-Button im Payments-Tab */
+[data-payment-filter].active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 /* Produkt-Detail im Kauf-Modal */
 .product-detail-header { margin-bottom: 1rem; }
 .product-detail-tagline {
@@ -5842,6 +5849,7 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="offers" onclick="switchAdminTab(event,'offers')">Angebote</button>
       <button class="admin-tab" data-panel="shop" onclick="switchAdminTab(event,'shop')">Shop</button>
       <button class="admin-tab" data-panel="discounts" onclick="switchAdminTab(event,'discounts')">Rabatte</button>
+      <button class="admin-tab" data-panel="payments" onclick="switchAdminTab(event,'payments')">Zahlungen</button>
       <button class="admin-tab" data-panel="texts" onclick="switchAdminTab(event,'texts')">Texte</button>
       <button class="admin-tab" data-panel="images" onclick="switchAdminTab(event,'images')">Bilder</button>
       <button class="admin-tab" data-panel="links" onclick="switchAdminTab(event,'links')">Links</button>
@@ -6234,6 +6242,30 @@ body.edit-mode-active [data-edit].edited::before {
         <h4 class="admin-section-label">Einlösungs-Statistik</h4>
         <div id="discountStats" style="font-size:0.9rem; line-height:1.7;"></div>
       </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="admin-panel" id="panel-payments">
+      <h4 class="admin-section-label">Zahlungen</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1.2rem; line-height:1.6;">
+        Übersicht aller Online-Zahlungen über Stripe (Buchungen + Shop). Bar/Twint-Zahlungen vor Ort werden hier nicht erfasst.
+      </p>
+
+      <!-- KPI-Kacheln -->
+      <div id="paymentsKpis" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:0.8rem; margin-bottom:1.5rem;"></div>
+
+      <!-- Filter -->
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button class="btn btn-secondary btn-sm" data-payment-filter="all" onclick="setPaymentFilter('all')">Alle</button>
+        <button class="btn btn-secondary btn-sm" data-payment-filter="paid" onclick="setPaymentFilter('paid')">Bezahlt</button>
+        <button class="btn btn-secondary btn-sm" data-payment-filter="pending" onclick="setPaymentFilter('pending')">Offen / Pending</button>
+        <button class="btn btn-secondary btn-sm" data-payment-filter="failed" onclick="setPaymentFilter('failed')">Fehlgeschlagen</button>
+        <button class="btn btn-secondary btn-sm" data-payment-filter="refunded" onclick="setPaymentFilter('refunded')">Erstattet</button>
+        <button class="btn btn-ghost btn-sm" onclick="reloadPayments()" style="margin-left:auto;">↻ Aktualisieren</button>
+      </div>
+
+      <!-- Tabelle -->
+      <div id="paymentsList"></div>
     </div>
 
     <!-- TEXTS -->
@@ -8065,6 +8097,9 @@ function switchAdminTab(e, panel) {
   if (target === 'discounts') {
     renderDiscountsPanel();
   }
+  if (target === 'payments') {
+    reloadPayments();
+  }
   if (target === 'offers') {
     renderAdminOffersList();
   }
@@ -8461,6 +8496,202 @@ function renderDiscountStats() {
       ${Object.entries(byCode).map(([k, v]) => `<li><code>${escapeHtml(k)}</code>: ${v}×</li>`).join('')}
     </ul>
   `;
+}
+
+/* ============================================
+   PAYMENTS / ZAHLUNGEN
+   ============================================ */
+const PaymentsView = {
+  filter: 'all',
+  bookings: [],
+  orders: [],
+  loading: false
+};
+
+function setPaymentFilter(f) {
+  PaymentsView.filter = f;
+  // Active-Button-Styling
+  document.querySelectorAll('[data-payment-filter]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-payment-filter') === f);
+  });
+  renderPaymentsList();
+}
+
+async function reloadPayments() {
+  const list = document.getElementById('paymentsList');
+  const kpis = document.getElementById('paymentsKpis');
+  if (!list) return;
+  if (!Cloud.ready) {
+    list.innerHTML = '<p style="color:var(--text-muted);">Cloud nicht verfügbar.</p>';
+    return;
+  }
+  PaymentsView.loading = true;
+  list.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">Lade Zahlungen…</p>';
+
+  try {
+    // Buchungen mit stripe_session_id oder payment_status != 'unpaid'
+    const allBookings = await Cloud.list('bookings');
+    PaymentsView.bookings = (allBookings || []).filter(b =>
+      b.stripe_session_id || (b.payment_status && b.payment_status !== 'unpaid')
+    );
+
+    // Alle Orders
+    PaymentsView.orders = await Cloud.list('orders') || [];
+
+    renderPaymentsKpis();
+    renderPaymentsList();
+  } catch (e) {
+    console.error('[reloadPayments]', e);
+    list.innerHTML = `<p style="color:#c0392b;">Fehler beim Laden: ${escapeHtml(e.message || String(e))}</p>`;
+  } finally {
+    PaymentsView.loading = false;
+  }
+}
+
+function renderPaymentsKpis() {
+  const container = document.getElementById('paymentsKpis');
+  if (!container) return;
+  const all = [
+    ...PaymentsView.bookings.map(b => ({ kind: 'booking', status: b.payment_status, amount: parseFloat(b.amount_paid || b.price || 0) })),
+    ...PaymentsView.orders.map(o => ({ kind: 'order', status: o.payment_status, amount: parseFloat(o.amount || 0) }))
+  ];
+  const paid = all.filter(x => x.status === 'paid');
+  const pending = all.filter(x => x.status === 'pending');
+  const failed = all.filter(x => x.status === 'failed');
+  const refunded = all.filter(x => x.status === 'refunded');
+  const sumPaid = paid.reduce((s, x) => s + x.amount, 0);
+  const sumRefunded = refunded.reduce((s, x) => s + x.amount, 0);
+
+  const kpi = (label, value, color) => `
+    <div style="padding:1rem; border:1px solid var(--border); border-radius:8px; background:var(--surface);">
+      <div style="font-size:0.7rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.3rem;">${label}</div>
+      <div style="font-size:1.4rem; font-weight:500; color:${color || 'var(--text)'};">${value}</div>
+    </div>
+  `;
+
+  container.innerHTML = [
+    kpi('Bezahlt (Anzahl)', paid.length, '#4a7c4e'),
+    kpi('Bezahlt (CHF)', `CHF ${sumPaid.toFixed(2)}`, '#4a7c4e'),
+    kpi('Offen / Pending', pending.length, '#b08968'),
+    kpi('Fehlgeschlagen', failed.length, '#c0392b'),
+    kpi('Erstattet', `${refunded.length} (CHF ${sumRefunded.toFixed(2)})`, '#888')
+  ].join('');
+}
+
+function renderPaymentsList() {
+  const container = document.getElementById('paymentsList');
+  if (!container) return;
+
+  // Beide Quellen zusammen: einheitliches Format
+  const items = [
+    ...PaymentsView.bookings.map(b => ({
+      id: b.id,
+      kind: 'Sitzung',
+      date_label: `${b.date} ${b.time}`,
+      sort_date: (b.paid_at || b.created_at || b.date) + (b.time || ''),
+      customer_name: (b.customer && b.customer.name) || '',
+      customer_email: (b.customer && b.customer.email) || '',
+      amount: parseFloat(b.amount_paid || b.price || 0),
+      status: b.payment_status || 'unpaid',
+      stripe_session_id: b.stripe_session_id,
+      stripe_payment_intent_id: b.stripe_payment_intent_id,
+      description: b.type_name || b.type,
+      raw: b,
+      raw_kind: 'booking'
+    })),
+    ...PaymentsView.orders.map(o => ({
+      id: o.id,
+      kind: 'Shop',
+      date_label: o.created_at ? new Date(o.created_at).toLocaleString('de-CH') : '',
+      sort_date: o.paid_at || o.created_at || '',
+      customer_name: o.customer_name || '',
+      customer_email: o.customer_email || '',
+      amount: parseFloat(o.amount || 0),
+      status: o.payment_status || 'pending',
+      stripe_session_id: o.stripe_session_id,
+      stripe_payment_intent_id: o.stripe_payment_intent_id,
+      description: o.product_name,
+      raw: o,
+      raw_kind: 'order'
+    }))
+  ];
+
+  // Filtern
+  const filtered = PaymentsView.filter === 'all'
+    ? items
+    : items.filter(i => i.status === PaymentsView.filter);
+
+  // Sortieren: neueste zuerst
+  filtered.sort((a, b) => (b.sort_date || '').localeCompare(a.sort_date || ''));
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="color:var(--text-muted); padding:1rem;">Keine Einträge mit Filter „${PaymentsView.filter}".</p>`;
+    return;
+  }
+
+  const statusColor = {
+    paid: '#4a7c4e',
+    pending: '#b08968',
+    failed: '#c0392b',
+    refunded: '#888',
+    unpaid: '#666'
+  };
+  const statusLabel = {
+    paid: 'Bezahlt',
+    pending: 'Offen',
+    failed: 'Fehlgeschlagen',
+    refunded: 'Erstattet',
+    unpaid: 'Unbezahlt'
+  };
+
+  container.innerHTML = `
+    <div style="display:grid; gap:0.6rem;">
+      ${filtered.map(i => `
+        <div style="border:1px solid var(--border); border-radius:8px; padding:0.9rem 1rem; background:var(--surface); display:grid; grid-template-columns:auto 1fr auto auto; gap:0.8rem; align-items:center;">
+          <div style="font-size:0.7rem; padding:0.2rem 0.5rem; background:var(--bg-alt); border-radius:4px; font-weight:500;">${i.kind}</div>
+          <div>
+            <div style="font-weight:500; font-size:0.95rem;">${escapeHtml(i.customer_name || '(ohne Name)')}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.15rem;">
+              ${escapeHtml(i.customer_email || '')}${i.description ? ` · ${escapeHtml(i.description)}` : ''}${i.date_label ? ` · ${escapeHtml(i.date_label)}` : ''}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:500;">CHF ${i.amount.toFixed(2)}</div>
+            <div style="font-size:0.75rem; color:${statusColor[i.status] || '#666'}; text-transform:uppercase; letter-spacing:0.04em; margin-top:0.15rem;">● ${statusLabel[i.status] || i.status}</div>
+          </div>
+          <div style="display:flex; gap:0.3rem;">
+            ${i.stripe_session_id ? `<button class="btn-icon-sm" onclick="openStripeSession('${escapeHtml(i.stripe_session_id)}')" title="In Stripe öffnen">↗</button>` : ''}
+            ${i.status === 'paid' ? `<button class="btn-icon-sm" onclick="refundPayment('${i.raw_kind}', '${i.id}', ${i.amount})" title="Erstatten">⤺</button>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function openStripeSession(sessionId) {
+  // Stripe-Dashboard URL für die Session
+  const url = `https://dashboard.stripe.com/payments/${sessionId}`;
+  window.open(url, '_blank', 'noopener');
+}
+
+async function refundPayment(kind, id, amount) {
+  if (!confirm(`Möchtest du wirklich CHF ${amount.toFixed(2)} erstatten?\n\nDie Rückerstattung läuft über Stripe und kann nicht rückgängig gemacht werden.`)) return;
+  if (!Cloud.ready) { showToast('Cloud nicht verfügbar'); return; }
+
+  try {
+    const res = await Cloud.invokeFunction('stripe-refund', { kind, id });
+    if (res && res.ok) {
+      showToast('Rückerstattung ausgelöst — wird in Kürze aktualisiert');
+      // Nach kurzer Verzögerung neu laden (Webhook setzt Status auf refunded)
+      setTimeout(() => reloadPayments(), 3000);
+    } else {
+      showToast('Rückerstattung fehlgeschlagen: ' + (res?.error || 'unbekannt'));
+    }
+  } catch (e) {
+    console.error('[refundPayment]', e);
+    showToast('Rückerstattung fehlgeschlagen');
+  }
 }
 
 /* === VALIDIERUNG (für Buchungs-Formular) === */
