@@ -5361,7 +5361,8 @@ body.edit-mode-active [data-edit].edited::before {
           </div>
           <div class="form-group">
             <label class="form-label">E-Mail</label>
-            <input type="email" class="form-input" id="bookEmail" required autocomplete="email">
+            <input type="email" class="form-input" id="bookEmail" required autocomplete="email" onblur="checkClientStatusForPayment()">
+            <div id="clientStatusHint" style="font-size:0.8rem; margin-top:0.4rem; min-height:1.1rem;"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Was möchtest du mir mitteilen? (optional)</label>
@@ -5408,25 +5409,22 @@ body.edit-mode-active [data-edit].edited::before {
             </label>
           </div>
 
-          <!-- Zahlungs-Auswahl -->
+          <!-- Zahlungs-Auswahl (wird dynamisch befüllt) -->
           <div class="form-group payment-choice" id="paymentChoiceWrap">
             <label class="form-label">Bezahlung</label>
-            <div class="payment-options">
+            <div class="payment-options" id="paymentOptionsContainer">
+              <!-- Default: nur Online für Neukunden, mehr nach Status-Check -->
               <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="later" checked>
+                <input type="radio" name="paymentMethod" value="now" checked>
                 <div class="payment-option-content">
-                  <strong>Bei der Sitzung</strong>
-                  <span>Bar oder Twint vor Ort</span>
-                </div>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="now">
-                <div class="payment-option-content">
-                  <strong>Jetzt online bezahlen</strong>
+                  <strong>Online bezahlen</strong>
                   <span>Karte oder Twint via Stripe</span>
                 </div>
               </label>
             </div>
+            <p id="paymentNotice" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">
+              Beim ersten Termin ist eine Online-Zahlung erforderlich.
+            </p>
           </div>
 
           <div class="booking-form-actions">
@@ -6001,6 +5999,31 @@ body.edit-mode-active [data-edit].edited::before {
               <input type="date" class="form-input" id="editClientBirthday">
             </div>
           </div>
+
+          <!-- Erlaubte Zahlungsmethoden -->
+          <h5 style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin:1rem 0 0.6rem 0;">Erlaubte Zahlungsmethoden</h5>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.6rem; line-height:1.5;">
+            Neukunden ohne Eintrag müssen immer online bezahlen (Stripe). Für bekannte Klient*innen kannst du zusätzliche Methoden freischalten.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1.2rem;">
+            <label style="display:flex; gap:0.5rem; align-items:center; padding:0.5rem 0.7rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-alt); opacity:0.7;">
+              <input type="checkbox" checked disabled>
+              <span style="font-size:0.9rem;"><strong>Online (Stripe — Karte + Twint)</strong> <span style="color:var(--text-muted); font-size:0.8rem;">— immer erlaubt</span></span>
+            </label>
+            <label style="display:flex; gap:0.5rem; align-items:center; padding:0.5rem 0.7rem; border:1px solid var(--border); border-radius:6px; cursor:pointer;">
+              <input type="checkbox" id="editClientAllowCash">
+              <span style="font-size:0.9rem;">Bar vor Ort</span>
+            </label>
+            <label style="display:flex; gap:0.5rem; align-items:center; padding:0.5rem 0.7rem; border:1px solid var(--border); border-radius:6px; cursor:pointer;">
+              <input type="checkbox" id="editClientAllowTwintLocal">
+              <span style="font-size:0.9rem;">Twint vor Ort (direkt aufs Handy)</span>
+            </label>
+            <label style="display:flex; gap:0.5rem; align-items:center; padding:0.5rem 0.7rem; border:1px solid var(--border); border-radius:6px; cursor:pointer;">
+              <input type="checkbox" id="editClientAllowInvoice">
+              <span style="font-size:0.9rem;">Rechnung (nachgelagert)</span>
+            </label>
+          </div>
+
           <div style="display:flex; gap:0.5rem;">
             <button class="btn btn-primary btn-sm" onclick="saveClientEdits()">Speichern</button>
             <button class="btn btn-ghost btn-sm" onclick="cancelClientEdits()">Abbrechen</button>
@@ -8766,6 +8789,114 @@ function checkDiscountCode() {
 }
 
 /**
+ * Prüft die Email des Klienten und befüllt das Payment-Optionen-Feld entsprechend.
+ * - Unbekannte/Neue Email → nur Online-Zahlung (Stripe Pflicht)
+ * - Bekannte Email → erlaubte Methoden aus client.allowed_payment_methods anzeigen
+ */
+function checkClientStatusForPayment() {
+  const emailEl = document.getElementById('bookEmail');
+  const container = document.getElementById('paymentOptionsContainer');
+  const notice = document.getElementById('paymentNotice');
+  const hint = document.getElementById('clientStatusHint');
+  if (!emailEl || !container) return;
+
+  const email = (emailEl.value || '').trim().toLowerCase();
+
+  // Default: nur Online (Neukunde)
+  const defaultHtml = `
+    <label class="payment-option">
+      <input type="radio" name="paymentMethod" value="now" checked>
+      <div class="payment-option-content">
+        <strong>Online bezahlen</strong>
+        <span>Karte oder Twint via Stripe</span>
+      </div>
+    </label>
+  `;
+
+  if (!email || !email.includes('@')) {
+    container.innerHTML = defaultHtml;
+    if (notice) {
+      notice.textContent = 'Beim ersten Termin ist eine Online-Zahlung erforderlich.';
+      notice.style.display = '';
+    }
+    if (hint) hint.innerHTML = '';
+    return;
+  }
+
+  // Klient suchen (lokal — Cloud-Lookup wäre genauer, aber Klient-Liste ist nach Login synct)
+  const clients = (typeof getClients === 'function') ? getClients() : [];
+  const client = clients.find(c =>
+    c.email && c.email.toLowerCase() === email
+  );
+
+  if (!client) {
+    // Neukunde
+    container.innerHTML = defaultHtml;
+    if (notice) {
+      notice.textContent = 'Beim ersten Termin ist eine Online-Zahlung erforderlich.';
+      notice.style.display = '';
+    }
+    if (hint) {
+      hint.innerHTML = '<span style="color:var(--text-muted);">Neue Buchung — Online-Zahlung erforderlich</span>';
+    }
+    return;
+  }
+
+  // Bekannter Klient — Methoden aus client lesen
+  const allowed = client.allowed_payment_methods || [];
+  let html = defaultHtml;
+
+  if (allowed.includes('cash')) {
+    html += `
+      <label class="payment-option">
+        <input type="radio" name="paymentMethod" value="later_cash">
+        <div class="payment-option-content">
+          <strong>Bar bei der Sitzung</strong>
+          <span>Direkt vor Ort</span>
+        </div>
+      </label>
+    `;
+  }
+  if (allowed.includes('twint_local')) {
+    html += `
+      <label class="payment-option">
+        <input type="radio" name="paymentMethod" value="later_twint">
+        <div class="payment-option-content">
+          <strong>Twint bei der Sitzung</strong>
+          <span>Direkt aufs Handy</span>
+        </div>
+      </label>
+    `;
+  }
+  if (allowed.includes('invoice')) {
+    html += `
+      <label class="payment-option">
+        <input type="radio" name="paymentMethod" value="later_invoice">
+        <div class="payment-option-content">
+          <strong>Per Rechnung</strong>
+          <span>Bezahlung nachgelagert</span>
+        </div>
+      </label>
+    `;
+  }
+
+  container.innerHTML = html;
+
+  if (notice) {
+    if (allowed.length > 0) {
+      notice.style.display = 'none';
+    } else {
+      notice.textContent = 'Für dich nur Online-Zahlung freigeschaltet.';
+      notice.style.display = '';
+    }
+  }
+  if (hint) {
+    const firstName = (client.name || '').split(' ')[0];
+    hint.innerHTML = `<span style="color:#4a7c4e;">✓ Willkommen zurück${firstName ? ', ' + escapeHtml(firstName) : ''}!</span>`;
+  }
+}
+
+/**
  * Berechnet den effektiven Rabatt fürs Buchen.
  * Reihenfolge: Aktionscode hat Vorrang vor Stammkundenrabatt (exklusiv).
  * Returns { applied, final_price, discount_amount, source, code, code_id, label }
@@ -9943,6 +10074,13 @@ function editCurrentClient() {
   document.getElementById('editClientEmail').value = client.email || '';
   document.getElementById('editClientPhone').value = client.phone || '';
   document.getElementById('editClientBirthday').value = client.birthday || '';
+
+  // Erlaubte Zahlungsmethoden (Default: nur online)
+  const allowed = client.allowed_payment_methods || [];
+  document.getElementById('editClientAllowCash').checked = allowed.includes('cash');
+  document.getElementById('editClientAllowTwintLocal').checked = allowed.includes('twint_local');
+  document.getElementById('editClientAllowInvoice').checked = allowed.includes('invoice');
+
   document.getElementById('clientEditForm').style.display = 'block';
   document.getElementById('clientEditForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -9960,12 +10098,19 @@ async function saveClientEdits() {
   const birthday = document.getElementById('editClientBirthday').value;
   if (!name) { showToast('Name darf nicht leer sein.'); return; }
 
+  // Erlaubte Zahlungsmethoden zusammenstellen
+  const allowed = [];
+  if (document.getElementById('editClientAllowCash').checked) allowed.push('cash');
+  if (document.getElementById('editClientAllowTwintLocal').checked) allowed.push('twint_local');
+  if (document.getElementById('editClientAllowInvoice').checked) allowed.push('invoice');
+
   try {
     await Cloud.updateOne('clients', 'id', id, {
       name,
       email: email || null,
       phone: phone || null,
-      birthday: birthday || null
+      birthday: birthday || null,
+      allowed_payment_methods: allowed
     });
     await syncClientsFromCloud();
     cancelClientEdits();
@@ -11587,6 +11732,30 @@ async function submitBooking(e) {
     return;
   }
 
+  // Zahlungsmethode validieren: Neukunde nur online, Stammkunden nur freigegebene Methoden
+  const chosenMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'now';
+  if (chosenMethod !== 'now') {
+    const clients = (typeof getClients === 'function') ? getClients() : [];
+    const client = clients.find(c =>
+      c.email && c.email.toLowerCase() === email.toLowerCase()
+    );
+    if (!client) {
+      showFormMsg(msg, 'Bei der ersten Buchung ist eine Online-Zahlung erforderlich.', 'error');
+      // Form auf Default zurücksetzen + Status-Check
+      checkClientStatusForPayment();
+      return;
+    }
+    // Method-Mapping prüfen
+    const methodMap = { 'later_cash': 'cash', 'later_twint': 'twint_local', 'later_invoice': 'invoice' };
+    const required = methodMap[chosenMethod];
+    const allowed = client.allowed_payment_methods || [];
+    if (required && !allowed.includes(required)) {
+      showFormMsg(msg, 'Diese Zahlungsmethode ist für dich nicht freigeschaltet. Bitte wähle eine andere.', 'error');
+      checkClientStatusForPayment();
+      return;
+    }
+  }
+
   const consent = {
     termsAccepted: true,
     privacyAccepted: true,
@@ -11606,7 +11775,7 @@ async function submitBooking(e) {
       // Rabatt berechnen (auf den Pack-Gesamtpreis)
       const packType = getSessionType('pack4');
       const discount = computeBookingDiscount(packType.price, 'bookings', email);
-      const customerPayload = { name, email, phone, notes };
+      const customerPayload = { name, email, phone, notes, payment_method: chosenMethod };
       if (discount.applied) {
         customerPayload.discount = {
           code: discount.code || null,
@@ -11673,8 +11842,7 @@ async function submitBooking(e) {
       hideBookingForm();
 
       // Falls "Jetzt zahlen" gewählt: Stripe-Checkout starten (für gesamtes Pack)
-      const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'later';
-      if (paymentMethod === 'now' && discount.final_price > 0) {
+      if (chosenMethod === 'now' && discount.final_price > 0) {
         await redirectToStripeCheckout({
           type: 'booking',
           booking_ids: newBookings.map(b => b.id),
@@ -11704,7 +11872,8 @@ async function submitBooking(e) {
         price: discount.final_price,
         customer: { name, email, phone, notes },
         consent,
-        status: 'confirmed'
+        status: 'confirmed',
+        payment_method: chosenMethod
       };
       // Discount-Infos im Customer-Objekt mitspeichern (zusätzlich)
       if (discount.applied) {
@@ -11762,8 +11931,7 @@ async function submitBooking(e) {
       hideBookingForm();
 
       // Falls "Jetzt zahlen" gewählt: Stripe-Checkout starten
-      const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'later';
-      if (paymentMethod === 'now' && booking.price > 0) {
+      if (chosenMethod === 'now' && booking.price > 0) {
         await redirectToStripeCheckout({
           type: 'booking',
           booking_ids: [booking.id],
