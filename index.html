@@ -9273,6 +9273,23 @@ function setCustomTexts(obj) {
  * Wendet alle gespeicherten Custom-Texte auf die Seite an.
  * Markiert geänderte Elemente mit der Klasse 'edited'.
  */
+// Keys die als "Zitate" behandelt werden — bekommen Guillemet-Normalisierung
+const QUOTE_TEXT_KEYS = new Set([
+  'about-quote', 'quote1-text', 'quote2-text', 'quote3-text'
+]);
+
+function normalizeQuotesInText(s) {
+  if (!s) return s;
+  // Schritt 1: Öffnendes Anfuehrungszeichen am Textanfang erkennen UND ersetzen
+  // Erkennt: „ (DE), " (ASCII), " (LEFT), wenn am Anfang (nach optionalem Whitespace)
+  s = s.replace(/^(\s*)["\u201E\u201C\u201F]/, '$1\u00AB');
+  // Schritt 2: Schliessendes Anfuehrungszeichen am Ende
+  s = s.replace(/["\u201D\u201C\u2033](\s*)$/, '\u00BB$1');
+  // Schritt 3: Verbleibende Anfuehrungszeichen mittendrin defensiv durch » ersetzen
+  s = s.replace(/[\u201C\u201D\u201E\u201F\u2033"]/g, '\u00BB');
+  return s;
+}
+
 function applyCustomTexts() {
   const custom = getCustomTexts();
   document.querySelectorAll('[data-edit]').forEach(el => {
@@ -9282,9 +9299,20 @@ function applyCustomTexts() {
       el.setAttribute('data-original', el.innerHTML.trim());
     }
     if (custom[key] !== undefined) {
-      el.innerHTML = custom[key];
+      let value = custom[key];
+      // Quote-Texte: Anführungszeichen normalisieren (auch aus alten Cloud-Speicherungen)
+      if (QUOTE_TEXT_KEYS.has(key)) {
+        value = normalizeQuotesInText(value);
+      }
+      el.innerHTML = value;
       el.classList.add('edited');
     } else {
+      // Auch bei HTML-Default normalisieren (Belt & Braces)
+      if (QUOTE_TEXT_KEYS.has(key)) {
+        const current = el.innerHTML;
+        const normalized = normalizeQuotesInText(current);
+        if (current !== normalized) el.innerHTML = normalized;
+      }
       el.classList.remove('edited');
     }
   });
