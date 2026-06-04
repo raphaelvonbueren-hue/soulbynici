@@ -35,7 +35,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236e8a9c'/%3E%3Ctext x='50' y='66' font-family='Georgia,serif' font-size='52' font-weight='400' fill='white' text-anchor='middle' font-style='italic'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="/butterfly-logo.png">
+<link rel="apple-touch-icon" href="/butterfly-logo.png">
+<meta name="theme-color" content="#4f6c7e">
 
 <style>
 /* ============================================
@@ -527,6 +529,9 @@ section {
   .about-subtitle { font-size: 0.78rem; letter-spacing: 1px; white-space: normal; }
 }
 .about-content p { margin-bottom: 1.2rem; line-height: 1.8; }
+.about-text { display: block; }
+.about-text p { margin-bottom: 1.2rem; line-height: 1.8; }
+.about-text p:last-child { margin-bottom: 0; }
 .about-signature {
   margin-top: 2rem;
   font-family: 'Cormorant Garamond', serif;
@@ -5192,9 +5197,11 @@ body.edit-mode-active [data-edit].edited::before {
         <span class="section-eyebrow" data-edit="about-eyebrow">Über mich</span>
         <h2 class="about-h2-block" data-edit="about-h2">Nicole Zauta</h2>
         <div class="about-subtitle" data-edit="about-subtitle">Aura- &amp; Chakramonia Therapeutin</div>
-        <p data-edit="about-p1">Mein Name ist Nicole. Ich begleite Menschen, die spüren, dass da mehr ist – mehr Tiefe, mehr Wahrhaftigkeit, mehr Verbindung zu sich selbst. Aus eigenem Erleben weiss ich, wie es sich anfühlt, sich selbst aus den Augen zu verlieren.</p>
-        <p data-edit="about-p2">In meinen Sitzungen schaffe ich einen Raum aus Stille und Sicherheit. Hier darfst du loslassen, was dich nicht mehr nährt, und dich erinnern an das, was du im Innersten schon immer warst – ganz, frei und mit dir selbst verbunden.</p>
-        <p data-edit="about-p3">Meine Arbeit verbindet intuitive Energiearbeit mit achtsamem Coaching und körperorientierter Begleitung. Jede Sitzung ist ein einzigartiger Moment.</p>
+        <div class="about-text" data-edit="about-text">
+          <p>Mein Name ist Nicole. Ich begleite Menschen, die spüren, dass da mehr ist – mehr Tiefe, mehr Wahrhaftigkeit, mehr Verbindung zu sich selbst. Aus eigenem Erleben weiss ich, wie es sich anfühlt, sich selbst aus den Augen zu verlieren.</p>
+          <p>In meinen Sitzungen schaffe ich einen Raum aus Stille und Sicherheit. Hier darfst du loslassen, was dich nicht mehr nährt, und dich erinnern an das, was du im Innersten schon immer warst – ganz, frei und mit dir selbst verbunden.</p>
+          <p>Meine Arbeit verbindet intuitive Energiearbeit mit achtsamem Coaching und körperorientierter Begleitung. Jede Sitzung ist ein einzigartiger Moment.</p>
+        </div>
         <div class="about-signature" data-edit="about-signature">~ mit Liebe, Nicole</div>
       </div>
     </div>
@@ -5205,7 +5212,6 @@ body.edit-mode-active [data-edit].edited::before {
 <!-- PARALLAX QUOTE 1 -->
 <section class="parallax-quote q1">
   <div class="parallax-quote-inner">
-    <div class="parallax-quote-mark">„</div>
     <div class="parallax-quote-text" data-edit="quote1-text">
       „Heilung beginnt dort, wo wir den Blick<br>
       von aussen nach innen richten.“
@@ -5277,7 +5283,6 @@ body.edit-mode-active [data-edit].edited::before {
 <!-- PARALLAX QUOTE 2 -->
 <section class="parallax-quote q2">
   <div class="parallax-quote-inner">
-    <div class="parallax-quote-mark">„</div>
     <div class="parallax-quote-text" data-edit="quote2-text">
       „Energie folgt der Aufmerksamkeit.<br>
       Wohin du schaust, dort beginnt sich etwas zu wandeln.“
@@ -5453,7 +5458,6 @@ body.edit-mode-active [data-edit].edited::before {
 <!-- PARALLAX QUOTE 3 -->
 <section class="parallax-quote q3">
   <div class="parallax-quote-inner">
-    <div class="parallax-quote-mark">„</div>
     <div class="parallax-quote-text" data-edit="quote3-text">
       „Du musst nicht alles verstehen,<br>
       um anzukommen. Du darfst einfach da sein.“
