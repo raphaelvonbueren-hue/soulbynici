@@ -5428,12 +5428,12 @@ body.edit-mode-active [data-edit].edited::before {
                 <input type="radio" name="paymentMethod" value="now" checked>
                 <div class="payment-option-content">
                   <strong>Online bezahlen</strong>
-                  <span>Karte oder Twint via Stripe</span>
+                  <span>Sichere Zahlung via Stripe</span>
                 </div>
               </label>
             </div>
             <p id="paymentNotice" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">
-              Beim ersten Termin ist eine Online-Zahlung erforderlich.
+              Twint & Revolut – gerne per WhatsApp anfragen
             </p>
           </div>
 
@@ -8817,7 +8817,7 @@ function checkClientStatusForPayment() {
       <input type="radio" name="paymentMethod" value="now" checked>
       <div class="payment-option-content">
         <strong>Online bezahlen</strong>
-        <span>Karte oder Twint via Stripe</span>
+        <span>Sichere Zahlung via Stripe</span>
       </div>
     </label>
   `;
@@ -8825,7 +8825,7 @@ function checkClientStatusForPayment() {
   if (!email || !email.includes('@')) {
     container.innerHTML = defaultHtml;
     if (notice) {
-      notice.textContent = 'Beim ersten Termin ist eine Online-Zahlung erforderlich.';
+      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
     if (hint) hint.innerHTML = '';
@@ -8842,7 +8842,7 @@ function checkClientStatusForPayment() {
     // Neukunde
     container.innerHTML = defaultHtml;
     if (notice) {
-      notice.textContent = 'Beim ersten Termin ist eine Online-Zahlung erforderlich.';
+      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
     if (hint) {
@@ -8895,7 +8895,7 @@ function checkClientStatusForPayment() {
     if (allowed.length > 0) {
       notice.style.display = 'none';
     } else {
-      notice.textContent = 'Für dich nur Online-Zahlung freigeschaltet.';
+      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
   }
@@ -11722,6 +11722,14 @@ async function showBookingForm() {
   }
 
   document.getElementById('bookingSummaryText').innerHTML = summaryText;
+
+  // Zahlungs-Auswahl bei kostenlosen Sitzungen ausblenden (z.B. Kennenlerngespräch)
+  const paymentWrap = document.getElementById('paymentChoiceWrap');
+  if (paymentWrap) {
+    const isFree = !type.price || type.price <= 0;
+    paymentWrap.style.display = isFree ? 'none' : '';
+  }
+
   wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -11781,8 +11789,14 @@ async function submitBooking(e) {
   }
 
   // Zahlungsmethode validieren: Neukunde nur online, Stammkunden nur freigegebene Methoden
-  const chosenMethod = (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'now';
-  if (chosenMethod !== 'now') {
+  // Bei kostenlosen Sitzungen (z.B. Kennenlerngespräch) keine Zahlungs-Prüfung
+  const sessionTypeForCheck = getSessionType(Booking.selectedType);
+  const isFreeSession = !sessionTypeForCheck || !sessionTypeForCheck.price || sessionTypeForCheck.price <= 0;
+  const chosenMethod = isFreeSession
+    ? 'free'
+    : (document.querySelector('input[name="paymentMethod"]:checked') || {}).value || 'now';
+
+  if (!isFreeSession && chosenMethod !== 'now') {
     const clients = (typeof getClients === 'function') ? getClients() : [];
     const client = clients.find(c =>
       c.email && c.email.toLowerCase() === email.toLowerCase()
