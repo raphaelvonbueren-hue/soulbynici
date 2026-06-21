@@ -5433,7 +5433,7 @@ body.edit-mode-active [data-edit].edited::before {
               </label>
             </div>
             <p id="paymentNotice" style="font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">
-              Twint & Revolut – gerne per WhatsApp anfragen
+              Twint, Revolut & Banküberweisung – gerne per WhatsApp anfragen
             </p>
           </div>
 
@@ -6273,6 +6273,7 @@ body.edit-mode-active [data-edit].edited::before {
       <div style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border);">
         <h4 class="admin-section-label">Einlösungs-Statistik</h4>
         <div id="discountStats" style="font-size:0.9rem; line-height:1.7;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="resetDiscountStats()" style="margin-top:1rem;">Statistik zurücksetzen</button>
       </div>
     </div>
 
@@ -8530,6 +8531,37 @@ function renderDiscountStats() {
   `;
 }
 
+async function resetDiscountStats() {
+  if (!confirm('Einlösungs-Statistik wirklich zurücksetzen?\n\nAlle erfassten Einlösungen werden gelöscht und die Zähler aller Codes auf 0 gesetzt. Die Rabattcodes selbst bleiben erhalten.')) return;
+
+  // 1. Lokale Redemptions löschen
+  Storage.set('discountRedemptions', []);
+
+  // 2. current_redemptions aller Codes auf 0
+  const codes = getDiscountCodes();
+  codes.forEach(c => { c.current_redemptions = 0; });
+  setDiscountCodes(codes);
+
+  // 3. Cloud: discount_redemptions leeren + Zähler zurücksetzen (best-effort)
+  if (Cloud.ready) {
+    try {
+      // Alle Redemption-Zeilen löschen
+      await Cloud.client.from('discount_redemptions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      // Zähler aller Codes auf 0 (nur Cloud-Codes mit UUID)
+      for (const c of codes) {
+        if (c.id && !c.id.startsWith('dc_')) {
+          await Cloud.upsertOne('discount_codes', { id: c.id, current_redemptions: 0 }, 'id');
+        }
+      }
+    } catch (e) {
+      console.error('[resetDiscountStats] Cloud-Fehler:', e);
+    }
+  }
+
+  renderDiscountsPanel();
+  showToast('Einlösungs-Statistik zurückgesetzt');
+}
+
 /* ============================================
    PAYMENTS / ZAHLUNGEN
    ============================================ */
@@ -8825,7 +8857,7 @@ function checkClientStatusForPayment() {
   if (!email || !email.includes('@')) {
     container.innerHTML = defaultHtml;
     if (notice) {
-      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
+      notice.textContent = 'Twint, Revolut & Banküberweisung – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
     if (hint) hint.innerHTML = '';
@@ -8842,7 +8874,7 @@ function checkClientStatusForPayment() {
     // Neukunde
     container.innerHTML = defaultHtml;
     if (notice) {
-      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
+      notice.textContent = 'Twint, Revolut & Banküberweisung – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
     if (hint) {
@@ -8895,7 +8927,7 @@ function checkClientStatusForPayment() {
     if (allowed.length > 0) {
       notice.style.display = 'none';
     } else {
-      notice.textContent = 'Twint & Revolut – gerne per WhatsApp anfragen';
+      notice.textContent = 'Twint, Revolut & Banküberweisung – gerne per WhatsApp anfragen';
       notice.style.display = '';
     }
   }
