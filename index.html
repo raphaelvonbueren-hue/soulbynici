@@ -12019,6 +12019,171 @@ async function submitBooking(e) {
   }
 }
 
+/* ============================================
+   ICS CALENDAR EVENT
+   Erzeugt .ics Datei für Termin (RFC 5545)
+   Funktioniert mit Google Calendar, Apple Calendar, Outlook, etc.
+   ============================================ */
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function formatIcsDate(dateStr, timeStr) {
+  // dateStr = 'YYYY-MM-DD', timeStr = 'HH:MM' (Schweizer Zeit)
+  // Wir markieren explizit Europe/Zurich
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.split(':').map(Number);
+  // Format: YYYYMMDDTHHMMSS (lokale Zeit, mit TZID)
+  return `${y}${pad2(m)}${pad2(d)}T${pad2(hh)}${pad2(mm)}00`;
+}
+
+function buildIcsForBooking(booking) {
+  // booking: { id, date, time, duration, typeName, customer?: {name, email} }
+  const start = formatIcsDate(booking.date, booking.time);
+
+  // End-Zeit: start + duration Minuten
+  const [y, m, d] = booking.date.split('-').map(Number);
+  const [hh, mm] = booking.time.split(':').map(Number);
+  const startDate = new Date(y, m - 1, d, hh, mm);
+  const endDate = new Date(startDate.getTime() + (booking.duration || 75) * 60 * 1000);
+  const end = `${endDate.getFullYear()}${pad2(endDate.getMonth() + 1)}${pad2(endDate.getDate())}T${pad2(endDate.getHours())}${pad2(endDate.getMinutes())}00`;
+
+  // DTSTAMP in UTC
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+  const uid = `${booking.id || ('booking-' + Date.now())}@soulbynici.ch`;
+  const title = `soulbynici · ${booking.typeName || 'Sitzung'}`;
+  const customerName = (booking.customer && booking.customer.name) || '';
+  const description = `Energiearbeit mit Nicole Zauta\n\n` +
+    (customerName ? `Klient*in: ${customerName}\n` : '') +
+    `Buchungs-Nr.: ${booking.id || '-'}\n\n` +
+    `Bei Fragen: info@soulbynici.ch`;
+  const location = 'soulbynici · Online via Zoom (Link in Buchungs-Mail)';
+
+  // ICS-Lines (escape special chars per RFC 5545)
+  const escapeIcs = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//soulbynici//Booking//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Zurich',
+    'BEGIN:STANDARD',
+    'DTSTART:19701025T030000',
+    'TZOFFSETFROM:+0200',
+    'TZOFFSETTO:+0100',
+    'TZNAME:CET',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10',
+    'END:STANDARD',
+    'BEGIN:DAYLIGHT',
+    'DTSTART:19700329T020000',
+    'TZOFFSETFROM:+0100',
+    'TZOFFSETTO:+0200',
+    'TZNAME:CEST',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3',
+    'END:DAYLIGHT',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART;TZID=Europe/Zurich:${start}`,
+    `DTEND;TZID=Europe/Zurich:${end}`,
+    `SUMMARY:${escapeIcs(title)}`,
+    `DESCRIPTION:${escapeIcs(description)}`,
+    `LOCATION:${escapeIcs(location)}`,
+    'STATUS:CONFIRMED',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT24H',
+    'ACTION:DISPLAY',
+    `DESCRIPTION:${escapeIcs('Erinnerung: ' + title)}`,
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+  return lines.join('\r\n');
+}
+
+function buildIcsForPack(bookings) {
+  // Mehrere VEVENTs in einem VCALENDAR
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const escapeIcs = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+
+  const header = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//soulbynici//Booking//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Zurich',
+    'BEGIN:STANDARD',
+    'DTSTART:19701025T030000',
+    'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10',
+    'END:STANDARD',
+    'BEGIN:DAYLIGHT',
+    'DTSTART:19700329T020000',
+    'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST',
+    'RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3',
+    'END:DAYLIGHT',
+    'END:VTIMEZONE'
+  ];
+  const events = [];
+
+  bookings.forEach((b, i) => {
+    const start = formatIcsDate(b.date, b.time);
+    const [y, m, d] = b.date.split('-').map(Number);
+    const [hh, mm] = b.time.split(':').map(Number);
+    const startDate = new Date(y, m - 1, d, hh, mm);
+    const endDate = new Date(startDate.getTime() + (b.duration || 75) * 60 * 1000);
+    const end = `${endDate.getFullYear()}${pad2(endDate.getMonth() + 1)}${pad2(endDate.getDate())}T${pad2(endDate.getHours())}${pad2(endDate.getMinutes())}00`;
+    const title = `soulbynici · 4er-Paket · Termin ${i + 1}/4`;
+    const customerName = (b.customer && b.customer.name) || '';
+    const description = `Energiearbeit mit Nicole Zauta\n\n` +
+      (customerName ? `Klient*in: ${customerName}\n` : '') +
+      `Termin ${i + 1} von 4\n` +
+      `Pack-Nr.: ${b.packId || '-'}\n\n` +
+      `Bei Fragen: info@soulbynici.ch`;
+
+    events.push(
+      'BEGIN:VEVENT',
+      `UID:${b.id || ('pack-' + i + '-' + Date.now())}@soulbynici.ch`,
+      `DTSTAMP:${dtstamp}`,
+      `DTSTART;TZID=Europe/Zurich:${start}`,
+      `DTEND;TZID=Europe/Zurich:${end}`,
+      `SUMMARY:${escapeIcs(title)}`,
+      `DESCRIPTION:${escapeIcs(description)}`,
+      `LOCATION:${escapeIcs('soulbynici · Online via Zoom (Link in Buchungs-Mail)')}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT24H',
+      'ACTION:DISPLAY',
+      `DESCRIPTION:${escapeIcs('Erinnerung: ' + title)}`,
+      'END:VALARM',
+      'END:VEVENT'
+    );
+  });
+
+  return [...header, ...events, 'END:VCALENDAR'].join('\r\n');
+}
+
+function downloadIcs(filename, icsText) {
+  const blob = new Blob([icsText], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
+
 function showConfirmation(booking) {
   const date = parseDateKey(booking.date);
   const formatted = date.toLocaleDateString('de-CH', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
@@ -12047,10 +12212,24 @@ function showConfirmation(booking) {
 
   document.getElementById('confirmationSubtitle').textContent = 'Ich freue mich auf dich. Du erhältst eine Bestätigung per E-Mail.';
   document.getElementById('confirmationActions').innerHTML = `
+    <button class="btn btn-secondary btn-block" onclick="downloadSingleBookingIcs('${booking.id}')" style="margin-bottom:0.5rem;">
+      📅 Termin in Kalender speichern
+    </button>
     <button class="btn btn-primary btn-block" onclick="closeModal('confirmationModal')">Schliessen</button>
   `;
 
+  // Booking-Daten temporär für ICS-Download merken
+  window._lastBooking = booking;
+
   openModal('confirmationModal');
+}
+
+function downloadSingleBookingIcs(bookingId) {
+  const b = window._lastBooking;
+  if (!b) { showToast('Keine Termin-Daten verfügbar'); return; }
+  const ics = buildIcsForBooking(b);
+  const dateStr = (b.date || '').replace(/-/g, '');
+  downloadIcs(`soulbynici-${dateStr}.ics`, ics);
 }
 
 function showPackConfirmation(bookings) {
@@ -12087,10 +12266,23 @@ function showPackConfirmation(bookings) {
 
   document.getElementById('confirmationSubtitle').textContent = 'Alle 4 Termine sind gesichert. Du erhältst eine Bestätigung per E-Mail.';
   document.getElementById('confirmationActions').innerHTML = `
+    <button class="btn btn-secondary btn-block" onclick="downloadPackIcs()" style="margin-bottom:0.5rem;">
+      📅 Alle 4 Termine in Kalender speichern
+    </button>
     <button class="btn btn-primary btn-block" onclick="closeModal('confirmationModal')">Schliessen</button>
   `;
 
+  // Pack-Daten für ICS-Download merken
+  window._lastPackBookings = bookings;
+
   openModal('confirmationModal');
+}
+
+function downloadPackIcs() {
+  const bs = window._lastPackBookings;
+  if (!bs || bs.length === 0) { showToast('Keine Termin-Daten verfügbar'); return; }
+  const ics = buildIcsForPack(bs);
+  downloadIcs('soulbynici-4er-paket.ics', ics);
 }
 
 /* ============================================
