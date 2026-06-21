@@ -5310,7 +5310,7 @@ body.edit-mode-active [data-edit].edited::before {
     <!-- Pack progress (nur wenn 4er-Paket aktiv) -->
     <div class="pack-progress reveal" id="packProgress" style="display:none;">
       <div class="pack-progress-header">
-        <div class="pack-progress-title">Deine 4 Termine</div>
+        <div class="pack-progress-title" data-edit="book-pack-title">Deine 4 Termine</div>
         <div class="pack-progress-count" id="packProgressCount">Termin 1 von 4</div>
       </div>
       <div class="pack-progress-list" id="packProgressList"></div>
@@ -5331,8 +5331,8 @@ body.edit-mode-active [data-edit].edited::before {
           </div>
           <div class="calendar-grid" id="calendarGrid"></div>
           <div class="calendar-legend">
-            <span><span class="legend-dot" style="background:var(--primary);"></span>Verfügbar</span>
-            <span><span class="legend-dot" style="background:var(--accent); outline:1px dashed var(--accent); outline-offset:1px;"></span>Heute</span>
+            <span><span class="legend-dot" style="background:var(--primary);"></span><span data-edit="book-legend-available">Verfügbar</span></span>
+            <span><span class="legend-dot" style="background:var(--accent); outline:1px dashed var(--accent); outline-offset:1px;"></span><span data-edit="book-legend-today">Heute</span></span>
           </div>
         </div>
 
@@ -5361,27 +5361,27 @@ body.edit-mode-active [data-edit].edited::before {
         <form id="bookingForm" onsubmit="submitBooking(event)">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Vorname & Name</label>
+              <label class="form-label" data-edit="book-label-name">Vorname & Name</label>
               <input type="text" class="form-input" id="bookName" required autocomplete="name">
             </div>
             <div class="form-group">
-              <label class="form-label">Telefon</label>
+              <label class="form-label" data-edit="book-label-phone">Telefon</label>
               <input type="tel" class="form-input" id="bookPhone" required autocomplete="tel" placeholder="+41 …">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">E-Mail</label>
+            <label class="form-label" data-edit="book-label-email">E-Mail</label>
             <input type="email" class="form-input" id="bookEmail" required autocomplete="email" onblur="checkClientStatusForPayment()">
             <div id="clientStatusHint" style="font-size:0.8rem; margin-top:0.4rem; min-height:1.1rem;"></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Was möchtest du mir mitteilen? (optional)</label>
+            <label class="form-label" data-edit="book-label-notes">Was möchtest du mir mitteilen? (optional)</label>
             <textarea class="form-textarea" id="bookNotes" placeholder="Anliegen, Wünsche, Fragen …"></textarea>
           </div>
 
           <!-- Rabattcode -->
           <div class="form-group" id="discountCodeWrap">
-            <label class="form-label">Rabattcode (optional)</label>
+            <label class="form-label" data-edit="book-label-discount">Rabattcode (optional)</label>
             <div style="display:flex; gap:0.5rem;">
               <input type="text" class="form-input" id="bookDiscountCode" placeholder="z.B. SOMMER24" style="text-transform:uppercase; flex:1;" oninput="onDiscountCodeInput()">
               <button type="button" class="btn btn-secondary btn-sm" onclick="checkDiscountCode()">Prüfen</button>
@@ -5393,19 +5393,19 @@ body.edit-mode-active [data-edit].edited::before {
           <div class="booking-terms">
             <div class="booking-terms-title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-              Wichtige Hinweise zu deiner Buchung
+              <span data-edit="book-terms-title">Wichtige Hinweise zu deiner Buchung</span>
             </div>
             <ul class="booking-terms-list">
-              <li><strong>Verbindlichkeit:</strong> Mit dem Klick auf „Buchen" ist dein Termin verbindlich reserviert.</li>
-              <li><strong>Verschiebung:</strong> Bis 24 Stunden vor dem Termin kannst du kostenfrei verschieben.</li>
-              <li><strong>Stornierung:</strong> Bei kurzfristigerer Absage (weniger als 24 Stunden) oder Nichterscheinen wird der volle Betrag fällig.</li>
-              <li><strong>Format:</strong> Die Sitzung findet online statt — den Zugangslink erhältst du rechtzeitig per E-Mail.</li>
-              <li><strong>Hinweis:</strong> Energiearbeit ist keine medizinische oder therapeutische Behandlung und ersetzt keine ärztliche oder psychotherapeutische Betreuung. Jegliche Haftung ist im gesetzlich zulässigen Rahmen ausgeschlossen.</li>
+              <li data-edit="book-term-1"><strong>Verbindlichkeit:</strong> Mit dem Klick auf „Buchen" ist dein Termin verbindlich reserviert.</li>
+              <li data-edit="book-term-2"><strong>Verschiebung:</strong> Bis 24 Stunden vor dem Termin kannst du kostenfrei verschieben.</li>
+              <li data-edit="book-term-3"><strong>Stornierung:</strong> Bei kurzfristigerer Absage (weniger als 24 Stunden) oder Nichterscheinen wird der volle Betrag fällig.</li>
+              <li data-edit="book-term-4"><strong>Format:</strong> Die Sitzung findet online statt — den Zugangslink erhältst du rechtzeitig per E-Mail.</li>
+              <li data-edit="book-term-5"><strong>Hinweis:</strong> Energiearbeit ist keine medizinische oder therapeutische Behandlung und ersetzt keine ärztliche oder psychotherapeutische Betreuung. Jegliche Haftung ist im gesetzlich zulässigen Rahmen ausgeschlossen.</li>
             </ul>
 
             <label class="booking-checkbox" id="termsCheckboxWrap">
               <input type="checkbox" id="bookAgreeTerms" required>
-              <span class="booking-checkbox-text">
+              <span class="booking-checkbox-text" data-edit="book-checkbox-terms">
                 Ich habe die <strong>Buchungsbedingungen</strong> gelesen und akzeptiere sie.
               </span>
             </label>
@@ -5421,7 +5421,7 @@ body.edit-mode-active [data-edit].edited::before {
 
           <!-- Zahlungs-Auswahl (wird dynamisch befüllt) -->
           <div class="form-group payment-choice" id="paymentChoiceWrap">
-            <label class="form-label">Bezahlung</label>
+            <label class="form-label" data-edit="book-label-payment">Bezahlung</label>
             <div class="payment-options" id="paymentOptionsContainer">
               <!-- Default: nur Online für Neukunden, mehr nach Status-Check -->
               <label class="payment-option">
