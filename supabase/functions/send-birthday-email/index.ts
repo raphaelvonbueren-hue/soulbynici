@@ -86,7 +86,8 @@ function buildClientMail(client: Client): string {
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
         soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
-        <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a>
+        <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
+        <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
     </div>
   `;

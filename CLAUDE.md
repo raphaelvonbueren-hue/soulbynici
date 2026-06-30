@@ -41,7 +41,7 @@ Single-File-Website für Nicole Zauta (Energiearbeit / Heilung, Schweiz).
 
 ## Edge Functions (alle 6 deployed, --no-verify-jwt)
 - stripe-create-checkout: erstellt Checkout-Session. WICHTIG: Betrag kommt aus dem Request-Body (amount × 100 = unit_amount), wird NICHT aus der DB gelesen. Nutzt dynamische Zahlungsmethoden (keine feste payment_method_types-Liste mehr) -> Twint erscheint automatisch sobald in Stripe aktiv.
-- stripe-webhook: verarbeitet checkout.session.completed, payment_intent.payment_failed, charge.refunded; setzt bookings/orders auf paid/refunded. Braucht STRIPE_WEBHOOK_SECRET.
+- stripe-webhook: verarbeitet checkout.session.completed, payment_intent.payment_failed, charge.refunded; setzt bookings/orders auf paid/refunded. Braucht STRIPE_WEBHOOK_SECRET. NEU: verschickt nach Zahlung eine Quittungs-Mail (Betrag CH-Format) und nach Refund eine Rückerstattungs-Mail via Resend (best-effort in try/catch nach dem DB-Update, damit Mail-Fehler nie ein 500/Stripe-Retry auslösen). Braucht dafür RESEND_API_KEY + FROM_EMAIL.
 - stripe-refund
 - send-booking-email: Bestätigung mit ICS-Anhang (RFC-5545, Europe/Zurich, VALARM -24h) + Zoom-Link im LOCATION; Admin-Kopie an ADMIN_EMAIL.
 - send-reminder-24h
@@ -63,15 +63,14 @@ STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY, FROM_EMAIL, ADMIN_EMAI
 - Edit-Mode-Texte in site_texts überschreiben das HTML.
 
 ## OFFENE TODOS (priorisiert)
-1. [SICHERHEIT] Stripe sk_live-Key rollen + Secret neu setzen.
-2. Cron-Jobs (Supabase -> Database -> Cron, braucht SERVICE_ROLE_KEY):
-   - birthday-email-daily   '0 8 * * *'   -> net.http_post auf .../send-birthday-email
-   - reminder-24h-hourly    '0 * * * *'   -> net.http_post auf .../send-reminder-24h
-3. ADMIN_EMAIL prüfen/setzen auf info@soulbynici.ch.
-4. Vercel Analytics + Speed Insights im Vercel-Dashboard aktivieren.
-5. Zoom-Link im Admin -> Einstellungen eintragen.
-6. Geburtstags-Modus im Admin -> Klient*innen wählen.
-7. Echter End-to-End-Zahlungstest (CHF 1 oder 111) + Refund: prüfen dass Webhook auf paid setzt und Mail mit Zoom+ICS ankommt. Reading-Preis liegt bei CHF 111; für 1-Franken-Test Preis temporär senken (Quelle des Preises noch lokalisieren: Admin-Angebote oder DB).
+1. [SICHERHEIT] Stripe sk_live-Key rollen + Secret neu setzen. → NUR im Stripe-Dashboard (Claude kann das nicht). Geprüft: alter Key ist NICHT im Repo/in der Git-History (nur Chat-Exposition). Danach `supabase secrets set STRIPE_SECRET_KEY=...` selbst ausführen.
+2. ✅ Cron-Jobs angelegt (via `supabase db query -f cron-jobs.sql`): birthday-email-daily '0 6 * * *' (=08:00 CH Sommer), reminder-24h-hourly '0 * * * *'. pg_cron+pg_net aktiv. OFFEN: `service_role_key` im Vault setzen (`select vault.create_secret('<KEY>','service_role_key');` im SQL-Editor) — sonst 401 am Gateway.
+   ⚠️ Bug gefixt + deployed: send-reminder-24h las b.email/b.name/b.session_type, korrekt ist customer.{name,email} + type_name/type (bookings.customer ist jsonb). clients-Tabelle dagegen hat Top-Level name/email/birthday — send-birthday-email ist korrekt.
+3. ✅ ADMIN_EMAIL = info@soulbynici.ch gesetzt.
+4. Vercel Analytics + Speed Insights: Scripts SIND im <head>. OFFEN: nur noch Dashboard-Toggle aktivieren (nur im Vercel-Dashboard möglich).
+5. ✅ Zoom-Link gesetzt (config:zoom_link in site_texts, vorhanden).
+6. Geburtstags-Modus: config:birthday_mode leer -> Default 'admin' (nur Nicole). Auf 'client'/'both' umstellen = Owner-Entscheidung (sendet echte Mails an Klient*innen).
+7. Zahlpfad: Owner bestätigt, echter Echtgeld-Test lief durch. Code-Audit bestätigt: create-checkout setzt metadata.type+booking_ids/order_id + payment_status='pending'; Webhook matcht darüber und schreibt payment_status='paid' in real existierende Spalten (bookings + orders, beide inkl. stripe_session_id). KEIN Schema-Bug. OFFEN/ungetestet: (a) Refund-Pfad (charge.refunded) real durchspielen, (b) kein persistenter DB-Beleg da bookings/orders leer — definitiver Nachweis via Stripe Dashboard -> Webhooks -> Delivery-Log (200 auf letztes checkout.session.completed), kein neuer Echtgeld-Test nötig.
 8. AGB + Widerrufsbelehrung (rechtlich, vor echtem Verkauf).
 9. Shop-Kauf-Modal-Texte als data-edit editierbar machen (Buchungs-Flow ist schon erledigt, Shop-Modal noch nicht).
 10. Google-Kalender 2-Wege-Sync via OAuth (Doppelbuchungs-Schutz inkl. privater Termine) — eigenes grösseres Projekt.

@@ -13,14 +13,16 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 interface Booking {
   id: string;
-  name: string;
-  email: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:MM
-  session_type: string;
-  session_name?: string;
+  type?: string;
+  type_name?: string;
   duration?: number;
   reminder_sent_at?: string | null;
+  customer?: {
+    name?: string;
+    email?: string;
+  };
 }
 
 async function sendResendEmail(to: string, subject: string, html: string) {
@@ -65,7 +67,8 @@ function formatDate(dateStr: string): string {
 
 function buildReminderMail(booking: Booking, zoomLink: string): string {
   const dateLabel = formatDate(booking.date);
-  const sessionLabel = booking.session_name || booking.session_type;
+  const sessionLabel = booking.type_name || booking.type || "Sitzung";
+  const customerName = (booking.customer && booking.customer.name) || "";
 
   const zoomSection = zoomLink
     ? `
@@ -85,7 +88,7 @@ function buildReminderMail(booking: Booking, zoomLink: string): string {
         Erinnerung: deine Sitzung morgen
       </h1>
       <p style="line-height:1.7;">
-        Liebe*r ${escapeHtml(booking.name)}, ich freue mich auf unsere Sitzung morgen.
+        Liebe*r ${escapeHtml(customerName)}, ich freue mich auf unsere Sitzung morgen.
       </p>
 
       <div style="margin-top:1.5rem;padding:1.5rem;background:#fffaf3;border-radius:8px;">
@@ -113,7 +116,8 @@ function buildReminderMail(booking: Booking, zoomLink: string): string {
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
         soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
-        <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a>
+        <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
+        <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
     </div>
   `;
@@ -165,11 +169,12 @@ serve(async (_req) => {
       const diffHours = diffMs / (1000 * 60 * 60);
 
       if (diffHours < 23 || diffHours > 25) continue;
-      if (!b.email) continue;
+      const email = b.customer?.email;
+      if (!email) continue;
 
       try {
         await sendResendEmail(
-          b.email,
+          email,
           "Erinnerung: deine Sitzung morgen",
           buildReminderMail(b, zoomLink),
         );
@@ -178,9 +183,9 @@ serve(async (_req) => {
           .from("bookings")
           .update({ reminder_sent_at: new Date().toISOString() })
           .eq("id", b.id);
-        results.push(`OK ${b.email} → ${b.date} ${b.time}`);
+        results.push(`OK ${email} → ${b.date} ${b.time}`);
       } catch (e) {
-        results.push(`ERR ${b.email}: ${(e as Error).message}`);
+        results.push(`ERR ${email}: ${(e as Error).message}`);
       }
     }
 
