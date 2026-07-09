@@ -65,10 +65,41 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function buildReminderMail(booking: Booking, zoomLink: string): string {
+// Ersetzt Platzhalter {name} etc. in editierbaren Textblöcken (aus site_texts).
+function fill(tpl: string, vars: Record<string, string>): string {
+  return String(tpl).replace(/\{(\w+)\}/g, (_m, k) => (k in vars ? vars[k] : `{${k}}`));
+}
+
+// Lädt alle E-Mail-Text-Overrides (email:*) in eine Map. Fehlt ein Key -> Default greift.
+async function loadEmailTexts(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from("site_texts")
+    .select("text_key, content")
+    .like("text_key", "email:%");
+  const m: Record<string, string> = {};
+  (data || []).forEach((r: { text_key: string; content: string }) => {
+    if (r.content != null && r.content !== "") m[r.text_key] = r.content;
+  });
+  return m;
+}
+
+function buildReminderMail(
+  booking: Booking,
+  zoomLink: string,
+  T: Record<string, string>,
+): string {
   const dateLabel = formatDate(booking.date);
   const sessionLabel = booking.type_name || booking.type || "Sitzung";
   const customerName = (booking.customer && booking.customer.name) || "";
+  const v = { name: escapeHtml(customerName) };
+  const heading = fill(T["email:reminder_heading"] ?? "Erinnerung: deine Sitzung morgen", v);
+  const intro = fill(T["email:reminder_intro"] ?? "Liebe*r {name}, ich freue mich auf unsere Sitzung morgen.", v);
+  const prep = fill(T["email:reminder_prep"] ?? "Nimm dir vor der Sitzung etwas Zeit für dich. Ein ruhiger Raum, ein Glas Wasser, vielleicht ein paar tiefe Atemzüge — alles was dir hilft, anzukommen.", v);
+  const signature = fill(T["email:reminder_signature"] ?? "Bis morgen, Nicole", v);
+  const footer = fill(T["email:footer"] ?? "soulbynici · Energiearbeit · Heilung · Selbstverbindung", v);
 
   const zoomSection = zoomLink
     ? `
@@ -85,10 +116,10 @@ function buildReminderMail(booking: Booking, zoomLink: string): string {
   return `
     <div style="font-family:Inter,Arial,sans-serif;color:#3a4a5a;max-width:600px;margin:0 auto;padding:2rem;">
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:#4f6c7e;margin-bottom:1rem;">
-        Erinnerung: deine Sitzung morgen
+        ${heading}
       </h1>
       <p style="line-height:1.7;">
-        Liebe*r ${escapeHtml(customerName)}, ich freue mich auf unsere Sitzung morgen.
+        ${intro}
       </p>
 
       <div style="margin-top:1.5rem;padding:1.5rem;background:#fffaf3;border-radius:8px;">
@@ -105,17 +136,16 @@ function buildReminderMail(booking: Booking, zoomLink: string): string {
       ${zoomSection}
 
       <p style="margin-top:2rem;line-height:1.7;font-style:italic;color:#5a6a7a;">
-        Nimm dir vor der Sitzung etwas Zeit für dich. Ein ruhiger Raum, ein Glas Wasser,
-        vielleicht ein paar tiefe Atemzüge — alles was dir hilft, anzukommen.
+        ${prep}
       </p>
 
       <p style="margin-top:2rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:#b08968;">
-        Bis morgen, Nicole
+        ${signature}
       </p>
 
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
-        soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
+        ${footer}<br>
         <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
         <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
@@ -134,6 +164,10 @@ serve(async (_req) => {
       .eq("text_key", "config:zoom_link")
       .single();
     const zoomLink = zoomRow?.content || "";
+
+    // Editierbare E-Mail-Texte laden (Admin -> E-Mail-Texte)
+    const T = await loadEmailTexts(supabase);
+    const subject = T["email:reminder_subject"] ?? "Erinnerung: deine Sitzung morgen";
 
     // Fenster: Buchungen die zwischen 23h und 25h von jetzt stattfinden
     // (toleranter Bereich, falls Cron mal um eine Stunde versetzt läuft)
@@ -175,8 +209,8 @@ serve(async (_req) => {
       try {
         await sendResendEmail(
           email,
-          "Erinnerung: deine Sitzung morgen",
-          buildReminderMail(b, zoomLink),
+          subject,
+          buildReminderMail(b, zoomLink, T),
         );
         // Reminder als versendet markieren
         await supabase

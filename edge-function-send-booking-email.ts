@@ -11,6 +11,12 @@ const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "n.zauta@forol.ch";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 interface Booking {
   id: string;
   date: string;
@@ -94,6 +100,25 @@ function escapeHtml(s: string | undefined | null): string {
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
+}
+
+// Ersetzt Platzhalter {name} etc. in editierbaren Textblöcken (aus site_texts).
+function fill(tpl: string, vars: Record<string, string>): string {
+  return String(tpl).replace(/\{(\w+)\}/g, (_m, k) => (k in vars ? vars[k] : `{${k}}`));
+}
+
+// Lädt alle E-Mail-Text-Overrides (email:*). Fehlt ein Key -> Default greift.
+async function loadEmailTexts(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from("site_texts").select("text_key, content").like("text_key", "email:%");
+  const m: Record<string, string> = {};
+  (data || []).forEach((r: { text_key: string; content: string }) => {
+    if (r.content != null && r.content !== "") m[r.text_key] = r.content;
+  });
+  return m;
 }
 
 function escapeIcs(s: string): string {
@@ -194,11 +219,18 @@ function buildClientMail(
   booking: Booking,
   zoomLink: string,
   isPack: boolean,
-  packAll?: Booking[],
+  packAll: Booking[] | undefined,
+  T: Record<string, string>,
 ): string {
   const dateLabel = formatDate(booking.date);
   const sessionLabel = booking.type_name || booking.type || "Sitzung";
   const customerName = (booking.customer && booking.customer.name) || "";
+  const v = { name: escapeHtml(customerName), session: escapeHtml(sessionLabel) };
+  const greeting = fill(T["email:booking_greeting"] ?? "Liebe*r {name},", v);
+  const intro = fill(T["email:booking_intro"] ?? "Ich freue mich, dass du dich für eine Sitzung entschieden hast. Deine Buchung ist bestätigt:", v);
+  const reschedule = fill(T["email:booking_reschedule"] ?? "Falls du den Termin verschieben oder absagen möchtest, melde dich bitte mindestens 24h vorher bei mir.", v);
+  const signature = fill(T["email:booking_signature"] ?? "Von Herzen, Nicole", v);
+  const footer = fill(T["email:footer"] ?? "soulbynici · Energiearbeit · Heilung · Selbstverbindung", v);
 
   const allTerminsHtml = isPack && packAll
     ? `
@@ -249,10 +281,10 @@ function buildClientMail(
   return `
     <div style="font-family:Inter,Arial,sans-serif;color:#3a4a5a;max-width:600px;margin:0 auto;padding:2rem;">
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:#4f6c7e;margin-bottom:1rem;">
-        Liebe*r ${escapeHtml(customerName)},
+        ${greeting}
       </h1>
       <p style="line-height:1.7;">
-        Ich freue mich, dass du dich für eine Sitzung entschieden hast. Deine Buchung ist bestätigt:
+        ${intro}
       </p>
 
       <div style="margin-top:1.5rem;padding:1.5rem;background:#fffaf3;border-radius:8px;">
@@ -266,16 +298,16 @@ function buildClientMail(
       ${calendarHint}
 
       <p style="margin-top:2rem;line-height:1.7;">
-        Falls du den Termin verschieben oder absagen möchtest, melde dich bitte mindestens 24h vorher bei mir.
+        ${reschedule}
       </p>
 
       <p style="margin-top:2rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:#b08968;">
-        Von Herzen, Nicole
+        ${signature}
       </p>
 
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
-        soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
+        ${footer}<br>
         <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
         <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
@@ -337,16 +369,19 @@ function buildAdminMail(
 }
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   try {
     if (req.method !== "POST") {
-      return new Response("Method not allowed", { status: 405 });
+      return new Response("Method not allowed", { status: 405, headers: corsHeaders });
     }
     const body = await req.json();
     const bookingIds: string[] = body.booking_ids || [];
     if (bookingIds.length === 0) {
       return new Response(
         JSON.stringify({ ok: false, error: "no booking_ids" }),
-        { status: 400 },
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -360,6 +395,9 @@ serve(async (req) => {
       .single();
     const zoomLink = zoomRow?.content || "";
 
+    // Editierbare E-Mail-Texte (Admin -> E-Mail-Texte)
+    const T = await loadEmailTexts(supabase);
+
     // Buchungen laden
     const { data: bookings, error } = await supabase
       .from("bookings")
@@ -369,7 +407,7 @@ serve(async (req) => {
     if (!bookings || bookings.length === 0) {
       return new Response(
         JSON.stringify({ ok: false, error: "bookings not found" }),
-        { status: 404 },
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -386,10 +424,13 @@ serve(async (req) => {
 
     // Mail an Klient*in
     if (customerEmail) {
+      const clientSubject = isPack
+        ? (T["email:booking_subject_pack"] ?? "Deine 4 Termine sind gebucht")
+        : (T["email:booking_subject"] ?? "Dein Termin ist gebucht");
       await sendResendEmail(
         customerEmail,
-        isPack ? "Deine 4 Termine sind gebucht" : "Dein Termin ist gebucht",
-        buildClientMail(first, zoomLink, isPack, bookings as Booking[]),
+        clientSubject,
+        buildClientMail(first, zoomLink, isPack, bookings as Booking[], T),
         [{ filename: icsFilename, content: icsBase64 }],
       );
     }
@@ -413,12 +454,12 @@ serve(async (req) => {
         zoom_included: !!zoomLink,
         ics_attached: true,
       }),
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
     return new Response(
       JSON.stringify({ ok: false, error: (e as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

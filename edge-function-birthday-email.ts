@@ -44,6 +44,30 @@ async function sendResendEmail(to: string, subject: string, html: string) {
   return res.json();
 }
 
+function escapeHtml(s: string | undefined | null): string {
+  if (!s) return "";
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// Ersetzt Platzhalter {name} etc. in editierbaren Textblöcken (aus site_texts).
+function fill(tpl: string, vars: Record<string, string>): string {
+  return String(tpl).replace(/\{(\w+)\}/g, (_m, k) => (k in vars ? vars[k] : `{${k}}`));
+}
+
+// Lädt alle E-Mail-Text-Overrides (email:*). Fehlt ein Key -> Default greift.
+async function loadEmailTexts(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from("site_texts").select("text_key, content").like("text_key", "email:%");
+  const m: Record<string, string> = {};
+  (data || []).forEach((r: { text_key: string; content: string }) => {
+    if (r.content != null && r.content !== "") m[r.text_key] = r.content;
+  });
+  return m;
+}
+
 function buildAdminMail(clients: Client[]): string {
   const list = clients
     .map((c) => {
@@ -67,25 +91,30 @@ function buildAdminMail(clients: Client[]): string {
   `;
 }
 
-function buildClientMail(client: Client): string {
+function buildClientMail(client: Client, T: Record<string, string>): string {
+  const v = { name: escapeHtml(client.name) };
+  const heading = fill(T["email:birthday_heading"] ?? "Alles Liebe, {name}!", v);
+  const text = fill(T["email:birthday_text"] ?? "Ich wünsche dir von Herzen einen wunderschönen Geburtstag — voller Liebe, Klarheit und Verbundenheit mit dir selbst.", v);
+  const wish = fill(T["email:birthday_wish"] ?? "Mögest du heute spüren, wie wertvoll und einzigartig du bist.", v);
+  const signature = fill(T["email:birthday_signature"] ?? "Von Herzen, Nicole", v);
+  const footer = fill(T["email:footer"] ?? "soulbynici · Energiearbeit · Heilung · Selbstverbindung", v);
   return `
     <div style="font-family:Inter,Arial,sans-serif;color:#3a4a5a;max-width:600px;margin:0 auto;padding:2rem;text-align:center;">
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.5rem;color:#4f6c7e;margin-bottom:1rem;">
-        Alles Liebe, ${client.name}!
+        ${heading}
       </h1>
       <p style="font-size:1.1rem;line-height:1.7;font-style:italic;color:#5a6a7a;">
-        Ich wünsche dir von Herzen einen wunderschönen Geburtstag — voller Liebe, Klarheit
-        und Verbundenheit mit dir selbst.
+        ${text}
       </p>
       <p style="margin-top:2rem;line-height:1.7;">
-        Mögest du heute spüren, wie wertvoll und einzigartig du bist.
+        ${wish}
       </p>
       <p style="margin-top:2rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:#b08968;">
-        Von Herzen, Nicole
+        ${signature}
       </p>
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
-        soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
+        ${footer}<br>
         <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
         <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
@@ -110,6 +139,10 @@ serve(async (_req) => {
       .eq("text_key", "config:birthday_mode")
       .single();
     const mode = settingRow?.content || "admin"; // default: nur Nicole
+
+    // Editierbare E-Mail-Texte (Admin -> E-Mail-Texte)
+    const T = await loadEmailTexts(supabase);
+    const clientSubject = T["email:birthday_subject"] ?? "Alles Liebe zum Geburtstag";
 
     // Alle Klient*innen mit Geburtstag heute (MM-DD)
     const { data: clients, error } = await supabase
@@ -153,8 +186,8 @@ serve(async (_req) => {
         try {
           await sendResendEmail(
             c.email,
-            "Alles Liebe zum Geburtstag",
-            buildClientMail(c),
+            clientSubject,
+            buildClientMail(c, T),
           );
           results.push(`Klient-Mail an ${c.email} versendet`);
         } catch (e) {

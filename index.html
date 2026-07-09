@@ -5836,6 +5836,7 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="discounts" onclick="switchAdminTab(event,'discounts')">Rabatte</button>
       <button class="admin-tab" data-panel="payments" onclick="switchAdminTab(event,'payments')">Zahlungen</button>
       <button class="admin-tab" data-panel="texts" onclick="switchAdminTab(event,'texts')">Texte</button>
+      <button class="admin-tab" data-panel="email-texts" onclick="switchAdminTab(event,'email-texts')">E-Mail-Texte</button>
       <button class="admin-tab" data-panel="images" onclick="switchAdminTab(event,'images')">Bilder</button>
       <button class="admin-tab" data-panel="links" onclick="switchAdminTab(event,'links')">Links</button>
       <button class="admin-tab" data-panel="themes" onclick="switchAdminTab(event,'themes')">Farben</button>
@@ -6303,6 +6304,20 @@ body.edit-mode-active [data-edit].edited::before {
       <div class="text-overrides-list" id="textOverridesList"></div>
       <div class="admin-actions">
         <button class="btn btn-secondary btn-sm" onclick="resetAllEdits()">Alle Texte auf Original zurücksetzen</button>
+      </div>
+    </div>
+
+    <!-- E-MAIL-TEXTE -->
+    <div class="admin-panel" id="panel-email-texts">
+      <h4 class="admin-section-label">E-Mail-Texte bearbeiten</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1rem; line-height:1.6;">
+        Passe die Texte an, die automatisch per E-Mail verschickt werden. Platzhalter in geschweiften
+        Klammern werden beim Versand ersetzt — z.&nbsp;B. <code>{name}</code> durch den Namen der Klient*in.
+        Lässt du ein Feld leer, gilt wieder der Standardtext.
+      </p>
+      <div id="emailTextsList"></div>
+      <div class="admin-actions">
+        <button class="btn btn-primary btn-sm" onclick="saveAllEmailTexts()">E-Mail-Texte speichern</button>
       </div>
     </div>
 
@@ -8099,6 +8114,7 @@ function switchAdminTab(e, panel) {
     const countEl = document.getElementById('textOverridesCount');
     if (countEl) countEl.textContent = Object.keys(getCustomTexts()).length;
   }
+  if (target === 'email-texts') renderEmailTextsPanel();
   if (target === 'images') {
     applyCustomImages();
   }
@@ -9277,6 +9293,117 @@ function getCustomTexts() { return Storage.get('customTexts', {}); }
 function setCustomTexts(obj) {
   Storage.set('customTexts', obj);
   // Note: einzelne Änderungen werden in onEditBlur direkt zur Cloud gepusht
+}
+
+/* ===== E-Mail-Texte (Admin -> E-Mail-Texte) =====
+   Editierbare Blöcke der versendeten Mails. Werden als site_texts-Keys "email:*"
+   gespeichert; die Edge Functions lesen sie beim Versand (Fallback = Standardtext).
+   {tokens} wie {name} werden beim Versand ersetzt. */
+const EMAIL_TEXT_GROUPS = [
+  { title: 'Buchungsbestätigung (an Kund*in)', fields: [
+    { key: 'email:booking_subject', label: 'Betreff (Einzeltermin)', def: 'Dein Termin ist gebucht' },
+    { key: 'email:booking_subject_pack', label: 'Betreff (4er-Paket)', def: 'Deine 4 Termine sind gebucht' },
+    { key: 'email:booking_greeting', label: 'Begrüssung ({name})', def: 'Liebe*r {name},' },
+    { key: 'email:booking_intro', label: 'Einleitung', def: 'Ich freue mich, dass du dich für eine Sitzung entschieden hast. Deine Buchung ist bestätigt:', multiline: true },
+    { key: 'email:booking_reschedule', label: 'Hinweis Verschieben/Absagen', def: 'Falls du den Termin verschieben oder absagen möchtest, melde dich bitte mindestens 24h vorher bei mir.', multiline: true },
+    { key: 'email:booking_signature', label: 'Signatur', def: 'Von Herzen, Nicole' },
+  ]},
+  { title: '24h-Erinnerung (an Kund*in)', fields: [
+    { key: 'email:reminder_subject', label: 'Betreff', def: 'Erinnerung: deine Sitzung morgen' },
+    { key: 'email:reminder_heading', label: 'Überschrift', def: 'Erinnerung: deine Sitzung morgen' },
+    { key: 'email:reminder_intro', label: 'Einleitung ({name})', def: 'Liebe*r {name}, ich freue mich auf unsere Sitzung morgen.', multiline: true },
+    { key: 'email:reminder_prep', label: 'Vorbereitungs-Text', def: 'Nimm dir vor der Sitzung etwas Zeit für dich. Ein ruhiger Raum, ein Glas Wasser, vielleicht ein paar tiefe Atemzüge — alles was dir hilft, anzukommen.', multiline: true },
+    { key: 'email:reminder_signature', label: 'Signatur', def: 'Bis morgen, Nicole' },
+  ]},
+  { title: 'Geburtstag (an Kund*in)', fields: [
+    { key: 'email:birthday_subject', label: 'Betreff', def: 'Alles Liebe zum Geburtstag' },
+    { key: 'email:birthday_heading', label: 'Überschrift ({name})', def: 'Alles Liebe, {name}!' },
+    { key: 'email:birthday_text', label: 'Haupttext', def: 'Ich wünsche dir von Herzen einen wunderschönen Geburtstag — voller Liebe, Klarheit und Verbundenheit mit dir selbst.', multiline: true },
+    { key: 'email:birthday_wish', label: 'Wunsch', def: 'Mögest du heute spüren, wie wertvoll und einzigartig du bist.', multiline: true },
+    { key: 'email:birthday_signature', label: 'Signatur', def: 'Von Herzen, Nicole' },
+  ]},
+  { title: 'Zahlungsbestätigung / Quittung (an Kund*in)', fields: [
+    { key: 'email:receipt_subject', label: 'Betreff', def: 'Zahlungsbestätigung' },
+    { key: 'email:receipt_heading', label: 'Überschrift', def: 'Danke für deine Zahlung' },
+    { key: 'email:receipt_intro', label: 'Einleitung ({name})', def: 'Liebe*r {name}, vielen Dank — deine Zahlung ist bei mir eingegangen.', multiline: true },
+    { key: 'email:receipt_note', label: 'Hinweis', def: 'Diese E-Mail dient als Zahlungsbestätigung. Die Termin-Details mit Zoom-Link hast du in der separaten Buchungsbestätigung erhalten.', multiline: true },
+  ]},
+  { title: 'Rückerstattung (an Kund*in)', fields: [
+    { key: 'email:refund_subject', label: 'Betreff', def: 'Rückerstattung' },
+    { key: 'email:refund_heading', label: 'Überschrift', def: 'Deine Rückerstattung' },
+    { key: 'email:refund_intro', label: 'Einleitung ({name})', def: 'Liebe*r {name}, deine Zahlung wurde zurückerstattet.', multiline: true },
+    { key: 'email:refund_note', label: 'Hinweis', def: 'Je nach Bank kann es ein paar Tage dauern, bis der Betrag wieder bei dir sichtbar ist. Bei Fragen melde dich jederzeit.', multiline: true },
+  ]},
+  { title: 'Gemeinsam (alle Mails)', fields: [
+    { key: 'email:signature', label: 'Signatur (Quittung & Rückerstattung)', def: 'Von Herzen, Nicole' },
+    { key: 'email:footer', label: 'Footer-Zeile', def: 'soulbynici · Energiearbeit · Heilung · Selbstverbindung' },
+  ]},
+];
+
+function emailTextFieldId(key) { return 'et_' + key.replace(/[^a-z0-9]/gi, '_'); }
+
+function renderEmailTextsPanel() {
+  const c = document.getElementById('emailTextsList');
+  if (!c) return;
+  const custom = getCustomTexts();
+  c.innerHTML = EMAIL_TEXT_GROUPS.map(g => `
+    <div style="margin-bottom:1.6rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border);">
+      <h4 class="admin-section-label" style="margin-top:0;">${escapeHtml(g.title)}</h4>
+      ${g.fields.map(f => {
+        const hasOverride = custom[f.key] !== undefined && custom[f.key] !== '';
+        const val = hasOverride ? custom[f.key] : f.def;
+        const id = emailTextFieldId(f.key);
+        const control = f.multiline
+          ? `<textarea id="${id}" data-etkey="${f.key}" class="form-input" rows="3" style="width:100%; resize:vertical;">${escapeHtml(val)}</textarea>`
+          : `<input id="${id}" data-etkey="${f.key}" type="text" class="form-input" style="width:100%;" value="${escapeHtml(val)}">`;
+        return `
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.82rem; color:var(--text-soft); margin-bottom:0.3rem;">
+              ${escapeHtml(f.label)}
+              ${hasOverride
+                ? '<span style="color:var(--accent); font-weight:500;">· angepasst</span>'
+                : '<span style="color:var(--text-muted);">· Standard</span>'}
+            </label>
+            ${control}
+          </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+async function saveAllEmailTexts() {
+  const custom = getCustomTexts();
+  const defMap = {};
+  EMAIL_TEXT_GROUPS.forEach(g => g.fields.forEach(f => { defMap[f.key] = (f.def || '').trim(); }));
+  const ops = [];
+  let saved = 0, reset = 0;
+  document.querySelectorAll('#emailTextsList [data-etkey]').forEach(el => {
+    const key = el.getAttribute('data-etkey');
+    const val = el.value.trim();
+    const wasSet = custom[key] !== undefined && custom[key] !== '';
+    if (val === '' || val === defMap[key]) {
+      // leer oder identisch mit Standard -> Override entfernen (Standard greift)
+      if (wasSet) {
+        delete custom[key];
+        reset++;
+        if (Cloud.ready && Cloud.isAuth()) ops.push(Cloud.deleteOne('site_texts', 'text_key', key));
+      }
+    } else if (val !== custom[key]) {
+      custom[key] = val;
+      saved++;
+      if (Cloud.ready && Cloud.isAuth()) ops.push(Cloud.upsertOne('site_texts', { text_key: key, content: val }, 'text_key'));
+    }
+  });
+  setCustomTexts(custom);
+  try {
+    await Promise.all(ops);
+  } catch (e) {
+    console.error('[saveAllEmailTexts]', e);
+    showToast('Cloud-Sync teilweise fehlgeschlagen');
+  }
+  renderEmailTextsPanel();
+  if (saved === 0 && reset === 0) { showToast('Keine Änderungen'); }
+  else { showToast(`E-Mail-Texte gespeichert (${saved} angepasst, ${reset} auf Standard)`); }
 }
 
 /**
@@ -11925,7 +12052,7 @@ async function submitBooking(e) {
         };
       }
 
-      const inserted = await Cloud.insertOne('bookings', bookingPayload);
+      const inserted = await Cloud.rpc('create_single_booking', { p_booking: bookingPayload });
 
       // Discount-Redemption registrieren (best-effort)
       if (discount.applied && discount.code_id) {

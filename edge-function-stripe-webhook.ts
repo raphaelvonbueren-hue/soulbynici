@@ -74,7 +74,28 @@ function formatChf(amount: number): string {
   }).format(amount);
 }
 
-function mailShell(headline: string, inner: string): string {
+// Ersetzt Platzhalter {name} etc. in editierbaren Textblöcken (aus site_texts).
+function fill(tpl: string, vars: Record<string, string>): string {
+  return String(tpl).replace(/\{(\w+)\}/g, (_m, k) => (k in vars ? vars[k] : `{${k}}`));
+}
+
+// Lädt alle E-Mail-Text-Overrides (email:*). Fehlt ein Key -> Default greift.
+async function loadEmailTexts(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from("site_texts").select("text_key, content").like("text_key", "email:%");
+  const m: Record<string, string> = {};
+  (data || []).forEach((r: { text_key: string; content: string }) => {
+    if (r.content != null && r.content !== "") m[r.text_key] = r.content;
+  });
+  return m;
+}
+
+function mailShell(headline: string, inner: string, T: Record<string, string>): string {
+  const signature = T["email:signature"] ?? "Von Herzen, Nicole";
+  const footer = T["email:footer"] ?? "soulbynici · Energiearbeit · Heilung · Selbstverbindung";
   return `
     <div style="font-family:Inter,Arial,sans-serif;color:#3a4a5a;max-width:600px;margin:0 auto;padding:2rem;">
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;color:#4f6c7e;margin-bottom:1rem;">
@@ -82,11 +103,11 @@ function mailShell(headline: string, inner: string): string {
       </h1>
       ${inner}
       <p style="margin-top:2rem;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:#b08968;">
-        Von Herzen, Nicole
+        ${signature}
       </p>
       <hr style="border:none;border-top:1px solid #e0e0e0;margin:2rem 0;">
       <p style="font-size:0.85rem;color:#888;">
-        soulbynici · Energiearbeit · Heilung · Selbstverbindung<br>
+        ${footer}<br>
         <a href="https://www.soulbynici.ch" style="color:#4f6c7e;">www.soulbynici.ch</a> ·
         <a href="mailto:info@soulbynici.ch" style="color:#4f6c7e;">info@soulbynici.ch</a>
       </p>
@@ -98,11 +119,16 @@ function buildReceiptMail(
   name: string,
   itemLabel: string,
   amount: number,
-  whenLine?: string,
+  whenLine: string | undefined,
+  T: Record<string, string>,
 ): string {
+  const v = { name: escapeHtml(name || "") };
+  const heading = fill(T["email:receipt_heading"] ?? "Danke für deine Zahlung", v);
+  const intro = fill(T["email:receipt_intro"] ?? "Liebe*r {name}, vielen Dank — deine Zahlung ist bei mir eingegangen.", v);
+  const note = fill(T["email:receipt_note"] ?? "Diese E-Mail dient als Zahlungsbestätigung. Die Termin-Details mit Zoom-Link hast du in der separaten Buchungsbestätigung erhalten.", v);
   const inner = `
     <p style="line-height:1.7;">
-      Liebe*r ${escapeHtml(name || "")}, vielen Dank — deine Zahlung ist bei mir eingegangen.
+      ${intro}
     </p>
     <div style="margin-top:1.5rem;padding:1.5rem;background:#fffaf3;border-radius:8px;">
       <p style="margin:0 0 0.5rem 0;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;color:#888;">
@@ -115,21 +141,25 @@ function buildReceiptMail(
       </p>
     </div>
     <p style="margin-top:1.5rem;line-height:1.7;">
-      Diese E-Mail dient als Zahlungsbestätigung. Die Termin-Details mit Zoom-Link
-      hast du in der separaten Buchungsbestätigung erhalten.
+      ${note}
     </p>
   `;
-  return mailShell("Danke für deine Zahlung", inner);
+  return mailShell(heading, inner, T);
 }
 
 function buildRefundMail(
   name: string,
   itemLabel: string,
   amount: number,
+  T: Record<string, string>,
 ): string {
+  const v = { name: escapeHtml(name || "") };
+  const heading = fill(T["email:refund_heading"] ?? "Deine Rückerstattung", v);
+  const intro = fill(T["email:refund_intro"] ?? "Liebe*r {name}, deine Zahlung wurde zurückerstattet.", v);
+  const note = fill(T["email:refund_note"] ?? "Je nach Bank kann es ein paar Tage dauern, bis der Betrag wieder bei dir sichtbar ist. Bei Fragen melde dich jederzeit.", v);
   const inner = `
     <p style="line-height:1.7;">
-      Liebe*r ${escapeHtml(name || "")}, deine Zahlung wurde zurückerstattet.
+      ${intro}
     </p>
     <div style="margin-top:1.5rem;padding:1.5rem;background:#f5f5f5;border-radius:8px;border-left:3px solid #4f6c7e;">
       <p style="margin:0 0 0.5rem 0;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;color:#888;">
@@ -141,11 +171,10 @@ function buildRefundMail(
       </p>
     </div>
     <p style="margin-top:1.5rem;line-height:1.7;">
-      Je nach Bank kann es ein paar Tage dauern, bis der Betrag wieder bei dir sichtbar ist.
-      Bei Fragen melde dich jederzeit.
+      ${note}
     </p>
   `;
-  return mailShell("Deine Rückerstattung", inner);
+  return mailShell(heading, inner, T);
 }
 
 // ---- Event-Verarbeitung ----
@@ -171,6 +200,11 @@ serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Editierbare E-Mail-Texte (Admin -> E-Mail-Texte)
+    const T = await loadEmailTexts(supabase);
+    const receiptSubject = T["email:receipt_subject"] ?? "Zahlungsbestätigung";
+    const refundSubject = T["email:refund_subject"] ?? "Rückerstattung";
 
     switch (event.type) {
       case "checkout.session.completed": {
@@ -216,8 +250,8 @@ serve(async (req) => {
                   : (isPack ? `${rows?.length} Termine` : undefined);
                 await sendResendEmail(
                   email,
-                  "Zahlungsbestätigung",
-                  buildReceiptMail(first?.customer?.name, label, amountTotal, whenLine),
+                  receiptSubject,
+                  buildReceiptMail(first?.customer?.name, label, amountTotal, whenLine, T),
                 );
                 console.log(`Receipt mail sent to ${email}`);
               }
@@ -249,11 +283,13 @@ serve(async (req) => {
               if (email) {
                 await sendResendEmail(
                   email,
-                  "Zahlungsbestätigung",
+                  receiptSubject,
                   buildReceiptMail(
                     order?.customer_name || order?.customer?.name,
                     order?.product_name || "Bestellung",
                     amountTotal,
+                    undefined,
+                    T,
                   ),
                 );
                 console.log(`Receipt mail sent to ${email}`);
@@ -309,8 +345,8 @@ serve(async (req) => {
                 : (b?.type_name || b?.type || "Sitzung");
               await sendResendEmail(
                 b.customer.email,
-                "Rückerstattung",
-                buildRefundMail(b.customer.name, label, refundAmount),
+                refundSubject,
+                buildRefundMail(b.customer.name, label, refundAmount, T),
               );
               console.log(`Refund mail sent to ${b.customer.email}`);
             } else {
@@ -323,11 +359,12 @@ serve(async (req) => {
               if (email) {
                 await sendResendEmail(
                   email,
-                  "Rückerstattung",
+                  refundSubject,
                   buildRefundMail(
                     order?.customer_name || order?.customer?.name,
                     order?.product_name || "Bestellung",
                     refundAmount,
+                    T,
                   ),
                 );
                 console.log(`Refund mail sent to ${email}`);

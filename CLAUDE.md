@@ -56,6 +56,13 @@ STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY, FROM_EMAIL, ADMIN_EMAI
 - Twint: wird gerade von der Bank verifiziert -> erscheint automatisch im Checkout, sobald aktiv (dank dynamischer Methoden, kein Code-Deploy nötig).
 - SICHERHEIT (zuerst erledigen!): Der sk_live-Schlüssel wurde in einem Chat sichtbar -> in Stripe rollen (Entwickler -> API-Schlüssel -> Schlüssel rollen), danach einmal `supabase secrets set STRIPE_SECRET_KEY=...`. Niemals einen Key in eine Datei schreiben.
 
+## E-Mail / Resend — Stand (BLOCKER)
+- Resend versendet aktuell NICHT. API-Key gültig, ABER Domain soulbynici.ch ist in Resend NICHT verifiziert (403 "domain is not verified").
+- FROM_EMAIL war falsch gesetzt ("Soul by Nici <onboarding@resend.dev>") -> Functions bauen `soulbynici <${FROM_EMAIL}>` -> Doppel-Wrap -> 422 bei JEDEM Versand. Gefixt: FROM_EMAIL = info@soulbynici.ch (bare).
+- Resend-Account-Owner: raphael.von.bueren@psp.live (Sandbox onboarding@resend.dev liefert nur an diese Adresse).
+- TODO (nur im Resend-Dashboard + DNS möglich): Domain soulbynici.ch bei resend.com/domains hinzufügen, DKIM/SPF-DNS-Records in die soulbynici.ch-Zone eintragen, verifizieren. Danach greift der FROM_EMAIL-Fix und alle Mails (Buchung/Reminder/Geburtstag/Quittung/Refund) senden. Gleicher Blocker-Typ wie SVSS (richis.ch).
+- Routing bestätigt: ADMIN_EMAIL = info@soulbynici.ch (Buchungs-Kopie + Geburtstag). info@zauta.ch nur als mailto-Link in der Kontakt-Sektion (Office Management), kein automatischer Versand.
+
 ## Gotchas
 - SQL: ALTER TABLE ADD COLUMN + CREATE INDEX auf dieselbe neue Spalte im selben Batch -> ganze Transaktion rollt zurück ("column does not exist"). Lösung: erst alle ALTER, dann separat die INDEX.
 - orders-Tabelle hat ALT-Struktur (nicht die neue annehmen).
