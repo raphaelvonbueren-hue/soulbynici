@@ -5843,6 +5843,7 @@ body.edit-mode-active [data-edit].edited::before {
       <button class="admin-tab" data-panel="testimonials" onclick="switchAdminTab(event,'testimonials')">Stimmen</button>
       <button class="admin-tab" data-panel="faq" onclick="switchAdminTab(event,'faq')">FAQ</button>
       <button class="admin-tab" data-panel="newsletter" onclick="switchAdminTab(event,'newsletter')">Newsletter</button>
+      <button class="admin-tab" data-panel="rechtliches" onclick="switchAdminTab(event,'rechtliches')">Rechtliches</button>
       <button class="admin-tab" data-panel="settings" onclick="switchAdminTab(event,'settings')">Einstellungen</button>
     </div>
 
@@ -6321,6 +6322,20 @@ body.edit-mode-active [data-edit].edited::before {
       </div>
     </div>
 
+    <!-- RECHTLICHES / IMPRESSUM -->
+    <div class="admin-panel" id="panel-rechtliches">
+      <h4 class="admin-section-label">Impressum &amp; Rechtstexte</h4>
+      <p style="font-size:0.9rem; color:var(--text-soft); margin-bottom:1rem; line-height:1.6;">
+        Die rechtlichen Textblöcke im Impressum. Titel + Text hinzufügen, bearbeiten, umsortieren
+        oder löschen. Änderungen erscheinen sofort im Impressum (Link im Footer).
+      </p>
+      <div id="impressumBlocksAdmin"></div>
+      <div class="admin-actions" style="margin-top:1rem;">
+        <button class="btn btn-secondary btn-sm" onclick="addImpressumBlock()">+ Block hinzufügen</button>
+        <button class="btn btn-primary btn-sm" onclick="saveImpressumBlocks()">Speichern</button>
+      </div>
+    </div>
+
     <!-- BILDER -->
     <div class="admin-panel" id="panel-images">
       <h4 class="admin-section-label">Bilder verwalten</h4>
@@ -6647,26 +6662,17 @@ body.edit-mode-active [data-edit].edited::before {
     <div class="legal-content">
       <h3>Verantwortlich für den Inhalt</h3>
       <p>
-        <span data-edit="impressum-name">Nicole Zauta</span><br>
-        <span data-edit="impressum-firma">soulbynici</span><br>
-        <span data-edit="impressum-adresse">Schweiz</span>
+        <span data-edit="impressum-name">Nicole Zauta<br>Schweiz</span>
       </p>
 
       <h3>Kontakt</h3>
       <p>
+        Telefon: <span data-edit="impressum-tel">—</span><br>
         E-Mail: <span data-edit="impressum-email">info@soulbynici.ch</span><br>
         Web: <span data-edit="impressum-web">www.soulbynici.ch</span>
       </p>
 
-      <h3 data-edit="impressum-h-haftung">Haftungsausschluss</h3>
-      <p data-edit="impressum-haftung-1">Die Autorin übernimmt keinerlei Gewähr hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit der Informationen.</p>
-      <p data-edit="impressum-haftung-2">Haftungsansprüche gegen die Autorin wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen entstehen, werden ausgeschlossen.</p>
-
-      <h3 data-edit="impressum-h-gesundheit">Gesundheitlicher Hinweis</h3>
-      <p data-edit="impressum-gesundheit">Energiearbeit ersetzt keine ärztliche oder psychotherapeutische Behandlung. Bei körperlichen oder seelischen Beschwerden wende dich bitte an entsprechende Fachpersonen. Die angebotenen Sitzungen verstehen sich als ergänzende Begleitung auf deinem persönlichen Weg.</p>
-
-      <h3 data-edit="impressum-h-urheber">Urheberrecht</h3>
-      <p data-edit="impressum-urheber">Die Urheber- und alle anderen Rechte an Inhalten, Bildern, Fotos oder anderen Dateien auf dieser Website gehören ausschliesslich Nicole Zauta oder den speziell genannten Rechtsinhabern.</p>
+      <div id="impressumBlocksList"></div>
     </div>
   </div>
 </div>
@@ -6991,6 +6997,17 @@ const Cloud = {
             Storage.set('processSteps', parsed);
           }
         } catch(e) { console.error('processSteps-Config parse error', e); }
+      }
+
+      // Impressum-Blöcke aus Config-Key
+      const impKey = textsObj['config:impressumBlocks'];
+      if (impKey) {
+        try {
+          const parsed = JSON.parse(impKey);
+          if (Array.isArray(parsed)) {
+            Storage.set('impressumBlocks', parsed);
+          }
+        } catch(e) { console.error('impressumBlocks-Config parse error', e); }
       }
 
       // Menü-Sichtbarkeit aus Config-Key
@@ -8115,6 +8132,7 @@ function switchAdminTab(e, panel) {
     if (countEl) countEl.textContent = Object.keys(getCustomTexts()).length;
   }
   if (target === 'email-texts') renderEmailTextsPanel();
+  if (target === 'rechtliches') { _impressumBlocksDraft = null; renderAdminImpressumBlocks(); }
   if (target === 'images') {
     applyCustomImages();
   }
@@ -10399,6 +10417,89 @@ function deleteProcessStep(idx) {
   steps.splice(idx, 1);
   setProcessSteps(steps);
   showToast('Schritt entfernt');
+}
+
+/* ---------- Impressum / Rechtstexte (dynamische Blöcke, admin-verwaltbar) ---------- */
+const DEFAULT_IMPRESSUM_BLOCKS = [
+  { title: "Haftungsausschluss", body: "Die Autorin übernimmt keinerlei Gewähr hinsichtlich der inhaltlichen Richtigkeit, Genauigkeit, Aktualität, Zuverlässigkeit und Vollständigkeit der Informationen.\n\nHaftungsansprüche gegen die Autorin wegen Schäden materieller oder immaterieller Art, welche aus dem Zugriff oder der Nutzung bzw. Nichtnutzung der veröffentlichten Informationen, durch Missbrauch der Verbindung oder durch technische Störungen entstanden sind, werden ausgeschlossen.\n\nAlle Angebote sind unverbindlich. Die Autorin behält es sich ausdrücklich vor, Teile der Seiten oder das gesamte Angebot ohne gesonderte Ankündigung zu verändern, zu ergänzen, zu löschen oder die Veröffentlichung zeitweise oder endgültig einzustellen." },
+  { title: "Haftung für Links", body: "Verweise und Links auf Webseiten Dritter liegen ausserhalb unseres Verantwortungsbereichs. Es wird jegliche Verantwortung für solche Webseiten abgelehnt. Der Zugriff und die Nutzung solcher Webseiten erfolgen auf eigene Gefahr des Nutzers oder der Nutzerin." },
+  { title: "Gesundheitlicher Hinweis", body: "Die angebotenen Sitzungen dienen der persönlichen Entwicklung, der Förderung des Wohlbefindens sowie der Begleitung auf deinem individuellen Lebensweg.\n\nSie ersetzen keine ärztliche, psychologische oder psychotherapeutische Abklärung, Beratung oder Behandlung. Es werden weder Diagnosen gestellt noch Heilversprechen abgegeben. Bei körperlichen oder psychischen Beschwerden wende dich bitte an eine entsprechend qualifizierte Fachperson.\n\nDie Energiearbeit versteht sich als ergänzende Begleitung und nicht als Ersatz für eine medizinische oder psychologische Betreuung." },
+  { title: "Urheberrecht", body: "Die Urheber- und alle anderen Rechte an Inhalten, Bildern, Fotos oder anderen Dateien auf der Website gehören ausschliesslich Nicole Zauta oder den speziell genannten Rechtsinhabern. Für die Reproduktion jeglicher Elemente ist die schriftliche Zustimmung der Urheberrechtsträger im Voraus einzuholen." }
+];
+function getImpressumBlocks() { return Storage.get('impressumBlocks', DEFAULT_IMPRESSUM_BLOCKS); }
+function setImpressumBlocks(list) {
+  Storage.set('impressumBlocks', list);
+  if (Cloud.ready && Cloud.isAuth()) {
+    Cloud.upsertOne('site_texts', { text_key: 'config:impressumBlocks', content: JSON.stringify(list) }, 'text_key')
+      .catch(e => { console.error(e); showToast('Cloud-Sync fehlgeschlagen'); });
+  }
+  renderImpressumBlocks();
+}
+function renderImpressumBlocks() {
+  const c = document.getElementById('impressumBlocksList');
+  if (!c) return;
+  c.innerHTML = getImpressumBlocks().map(b => `
+      <h3>${escapeHtml(b.title || '')}</h3>
+      <p style="white-space:pre-line;">${escapeHtml(b.body || '')}</p>
+  `).join('');
+}
+/* Admin-Editor (Tab „Rechtliches") */
+let _impressumBlocksDraft = null;
+function impressumDraft() {
+  if (!_impressumBlocksDraft) _impressumBlocksDraft = getImpressumBlocks().map(b => ({ title: b.title || '', body: b.body || '' }));
+  return _impressumBlocksDraft;
+}
+function syncImpressumDraftFromDOM() {
+  impressumDraft().forEach((b, i) => {
+    const t = document.getElementById('impBlockTitle_' + i);
+    const x = document.getElementById('impBlockBody_' + i);
+    if (t) b.title = t.value;
+    if (x) b.body = x.value;
+  });
+}
+function renderAdminImpressumBlocks() {
+  const c = document.getElementById('impressumBlocksAdmin');
+  if (!c) return;
+  const blocks = impressumDraft();
+  if (blocks.length === 0) { c.innerHTML = '<div class="admin-list-empty">Noch keine Blöcke. Füge einen hinzu.</div>'; return; }
+  c.innerHTML = blocks.map((b, i) => `
+    <div style="margin-bottom:1rem; padding:1rem; border:1px solid var(--border); border-radius:var(--radius-sm);">
+      <div style="display:flex; gap:0.4rem; justify-content:flex-end; margin-bottom:0.5rem;">
+        ${i > 0 ? `<button class="btn btn-secondary btn-sm" onclick="moveImpressumBlock(${i},-1)" title="Nach oben">↑</button>` : ''}
+        ${i < blocks.length - 1 ? `<button class="btn btn-secondary btn-sm" onclick="moveImpressumBlock(${i},1)" title="Nach unten">↓</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="deleteImpressumBlock(${i})">× Löschen</button>
+      </div>
+      <input id="impBlockTitle_${i}" class="form-input" style="width:100%; margin-bottom:0.5rem; font-weight:600;" value="${escapeHtml(b.title || '')}" placeholder="Titel (z.B. Haftung für Links)">
+      <textarea id="impBlockBody_${i}" class="form-input" rows="4" style="width:100%; resize:vertical;" placeholder="Text …">${escapeHtml(b.body || '')}</textarea>
+    </div>
+  `).join('');
+}
+function addImpressumBlock() {
+  syncImpressumDraftFromDOM();
+  impressumDraft().push({ title: '', body: '' });
+  renderAdminImpressumBlocks();
+}
+function moveImpressumBlock(idx, delta) {
+  syncImpressumDraftFromDOM();
+  const d = impressumDraft();
+  const j = idx + delta;
+  if (j < 0 || j >= d.length) return;
+  const tmp = d[idx]; d[idx] = d[j]; d[j] = tmp;
+  renderAdminImpressumBlocks();
+}
+function deleteImpressumBlock(idx) {
+  if (!confirm('Diesen Block löschen?')) return;
+  syncImpressumDraftFromDOM();
+  impressumDraft().splice(idx, 1);
+  renderAdminImpressumBlocks();
+}
+function saveImpressumBlocks() {
+  syncImpressumDraftFromDOM();
+  const cleaned = impressumDraft().filter(b => (b.title && b.title.trim()) || (b.body && b.body.trim()));
+  setImpressumBlocks(cleaned);
+  _impressumBlocksDraft = cleaned.map(b => ({ title: b.title, body: b.body }));
+  renderAdminImpressumBlocks();
+  showToast('Rechtstexte gespeichert');
 }
 
 const DEFAULT_SESSION_TYPES = [{"id":"kennenlernen","name":"Kennenlerngespräch","duration":30,"price":0,"priceLabel":"kostenlos","priceSubtext":"","description":"30 Min. unverbindlich · online","tagline":"30 Minuten, um gemeinsam zu spüren, ob wir zueinander passen.","features":["Deine Fragen, mein Hinhören","Klarheit über den nächsten Schritt","Ohne Druck","Unverbindlich"],"ctaLabel":"Gespräch buchen","badge":"","featured":false},{"id":"aura-chakrareading","name":"Aura & Chakra Reading","duration":45,"price":111,"priceLabel":"CHF 111","priceSubtext":"","description":"Für Klarheit, innere Ausrichtung & tiefe Seelenverbindung","tagline":"Das Reading zeigt /\nhilft dir:","features":["dein aktuelles Energiefeld","deine Blockaden & Potenziale","Botschaften, die dich begleiten","dich selbst tiefer zu verstehen","Muster & Blockaden zu erkennen","Klarheit für deinen Weg zu gewinnen","Fremdenergien & Belastungen zu erkennen"],"ctaLabel":"Buchen","badge":"","featured":false},{"id":"single","name":"Energiearbeit (Einzelsession)","duration":75,"price":222,"priceLabel":"CHF 222","priceSubtext":"","description":"Für Balance, Energiefluss & innere Harmonie","tagline":"Die Energiearbeit hilft dir:","features":["dein Energiesystem zu klären, zu stabilisieren & frei fliessen zu lassen","innere Blockaden & wiederkehrende Muster zu erkennen & zu lösen","neue Glaubenssätze zu integrieren","dich innerlich neu auszurichten","energetische Belastungen, Krankheiten & Fremdenergien zu erkennen & zu lösen"],"ctaLabel":"Termin auswählen","badge":"","featured":false},{"id":"pack4","name":"Energiearbeit (4er-Paket)","duration":75,"price":777,"priceLabel":"CHF 777","priceSubtext":"statt 888","description":"4 × 75 Min. spare CHF 111","tagline":"","features":["Beschreibung siehe Einzelsession","Wenn du bereits bist, deine Themen nicht nur anzuschauen, sondern sie langfristig zu lösen, bietet dir das 4er-Paket den passenden Rahmen für echte, nachhaltige Veränderung"],"ctaLabel":"4 Termine buchen","badge":"Beliebt","featured":true},{"id":"3monatsbegleitungfrdeinemaximaletransformation","name":"3 Monats- begleitung","duration":15,"price":2222,"priceLabel":"CHF 2'222","priceSubtext":"","description":"für deine maximale Transformation","tagline":"für deine maximale Transformation","features":["Aura & Chakra Reading","Energiearbeit","Unterstützung zwischen den Sessions","WhatsApp-Support","12 Session à 75 Min","Kennenlerngespräch ist zwingend erforderlich, damit wir beide spüren, ob es für uns passt"],"ctaLabel":"Buchen","badge":"","featured":false}];
@@ -12884,6 +12985,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderBookingTypes();
   renderOfferCardsFromConfig();
   renderProcessSteps();
+  renderImpressumBlocks();
   renderShopProducts();
   renderCalendar();
   renderSlots();
@@ -12910,6 +13012,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderBookingTypes();
     renderOfferCardsFromConfig();
     renderProcessSteps();
+    renderImpressumBlocks();
     applyCustomTexts();
     applyNavVisibility();
     renderCalendar();
